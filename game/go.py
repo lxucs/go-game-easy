@@ -36,8 +36,9 @@ def neighbors(point):
 
 def cal_liberty(points,board):
     """Find and return the liberties of the point."""
-    return [point for point in neighbors(points)
-            if not board.stonedict['BLACK'][point] and not board.stonedict['WHITE'][point]]
+    liberties = [point for point in neighbors(points)
+                 if not board.stonedict['BLACK'][point] and not board.stonedict['WHITE'][point]]
+    return set(liberties)
 
 
 class Group(object):
@@ -57,15 +58,11 @@ class Group(object):
             self.liberties = liberties
         else:  # create a new group
             self.points = [point]
-            self.liberties = set(cal_liberty(point, board))
+            self.liberties = cal_liberty(point, board)
 
     @property
     def num_liberty(self):
         return len(self.liberties)
-        
-    def remove(self):
-        """TODO"""
-        self.board.removedgroup=self
 
     def add_stones(self, pointlist):
         """Only update stones, not liberties"""
@@ -123,6 +120,7 @@ class Board(object):
         # Group list
         self.groups = {'BLACK': [], 'WHITE': []}
         self.endangered_groups = []  # groups with only 1 liberty
+        self.removed_group = None  # This is assigned when game ends
 
         for i in range(1, BOARD_SIZE):
             for j in range(1, BOARD_SIZE):
@@ -155,7 +153,7 @@ class Board(object):
             """Remove the liberty from given group, update winner or endangered groups"""
             group.remove_liberty(point)
             if len(group.liberties) == 0 and group.color != color:  # The new stone is opponent's, check winning status
-                group.remove()
+                self.removed_group = group  # Set removed_group
                 self.winner = opponent_color(group.color)
             elif len(group.liberties) == 1:  # This group only has one liberty now
                 self.endangered_groups.append(group)
@@ -179,6 +177,7 @@ class Board(object):
                 self.endangered_groups.append(newgroup)
                 
     def create_group(self, point, color):
+        """Create a new group."""
         # Update group list
         group = Group(self, point, color)
         self.groups[color].append(group)
@@ -192,6 +191,7 @@ class Board(object):
             self.libertydict[color][liberty].append(group)
       
     def remove_group(self, group):
+        """Remove the group."""
         color = group.color
         # Update group list
         self.groups[group.color].remove(group)
@@ -205,49 +205,72 @@ class Board(object):
         for liberty in group.liberties:
             self.libertydict[color][liberty].remove(group)
 
-    def mergegroups(self,grouplist,point): 
-        """Merge every group in grouplist, with stone being the latest move"""
-        color=grouplist[0].color
-        newgroup=grouplist[0]
-        allliberties=grouplist[0].liberties
+    def merge_groups(self, grouplist, point):
+        """
+        Merge groups (assuming same color).
+        :param grouplist:
+        :param point: the last move
+        """
+        color = grouplist[0].color
+        newgroup = grouplist[0]
+        all_liberties = grouplist[0].liberties
+
+        # Add last move (update newgroup and stonedict)
         newgroup.add_stones([point])
+        self.stonedict[color][point].append(newgroup)
+        all_liberties = all_liberties | cal_liberty(point, self)
+
+        # Merge with other groups (update newgroup and stonedict)
         for group in grouplist[1:]:
-            allliberties = allliberties | group.liberties
             newgroup.add_stones(group.points)
+            for p in group.points:
+                self.stonedict[color][p].append(newgroup)
+            all_liberties = all_liberties | group.liberties
             self.remove_group(group)
-        
-        allliberties=list(set(allliberties).union(set(cal_liberty(point, self))))
-        for point in allliberties:
+
+        # Remove last move from all_liberties
+        if point in all_liberties:
+            all_liberties.remove(point)
+
+        # Update libertydict
+        newgroup.liberties = all_liberties
+        self.libertydict[color][point] = []
+        self.libertydict[opponent_color(color)][point] = []
+        for point in all_liberties:
             if newgroup not in self.libertydict[color][point]:
                 self.libertydict[color][point].append(newgroup)
-        newgroup.liberties=allliberties
-        self.check_endanger(newgroup)
-    
 
-    def getLegalAction(self):
-        endangerflag=set()
+        # TODO
+        self.check_endanger(newgroup)
+
+    def get_legal_action(self):
+        endangered_liberties = set()
         for group in self.endangered_groups:
-            if group.color==self.next:
-                endangerflag=endangerflag.union(group.liberties) #you need to save your own group
+            if group.color == self.next:
+                endangered_liberties = endangered_liberties | group.liberties
             else:
-                return group.liberties[0] #Return the point directly (not list) to congratulate that you win
-        if len(endangerflag)>1:
-            return endangerflag #return the set to indicate you lose: you have more than 2 endangered group
-        elif len(endangerflag)==1:
-            return list(endangerflag)# You must rescue your sole endangerer group in this move
-        legalactionset=set()
+                return group.liberties[0]  # Return the point to indicate you win
+
+        if len(endangered_liberties) > 1:
+            return endangered_liberties  # Return the set to indicate you lose
+
+        # No win or lose now; return a list of valid moves
+        if len(endangered_liberties) == 1:
+            return list(endangered_liberties)  # Must rescue your sole endangered liberty in this move
+        legal_actions = set()
         for group in self.groups[opponent_color(self.next)]:
-            legalactionset=legalactionset.union(set(group.liberties))
-        return list(legalactionset)
+            legal_actions = legal_actions | group.liberties
+        return list(legal_actions)
     
-    def putstone(self,point,checklegal=False):
-        if checklegal:
-            legallist=self.getLegalAction()
-            if isinstance(legallist,tuple):
-                legallist=[legallist]
-            if point not in legallist:
-                print ('Error: illegal move, try again.')
+    def put_stone(self,point, check_legal=False):
+        if check_legal:
+            legal_actions = self.get_legal_action()
+            if isinstance(legal_actions, tuple):
+                legal_actions = [legal_actions]
+            if point not in legal_actions:
+                print('Error: illegal move, try again.')
                 return False
+
         groupintouch=self.libertydict[self.next][point] # find all your group attache to point
         self.shorten_liberty_for_groups(point,self.next) # remove the point from all groups's liberty
         print(self.winner,'@@@@')
@@ -260,17 +283,17 @@ class Board(object):
         elif len(groupintouch)==0: # Create a group for the new stone
             self.create_group(point,self.next)
         else: #Merge all the groups in touch with the new stone
-            self.mergegroups(groupintouch,point)
+            self.merge_groups(groupintouch,point)
         self.next=opponent_color(self.next) #Take turns
         return True
     
     def generate_successor_state(self, action):
         newboard = self.copy()
-        newboard.putstone(action)
+        newboard.put_stone(action)
         return newboard
         
     def random_move(self):
-        legalmove=self.getLegalAction()
+        legalmove=self.get_legal_action()
         if isinstance(legalmove,tuple):
             legalmove=[legalmove]
         return list(legalmove)[0]
@@ -310,11 +333,11 @@ class Board(object):
 
 if __name__=='__main__':  
     A=Board()
-    A.putstone((10,10))
-    A.putstone((9,10))
-    A.putstone((9,9))
-    A.putstone((8,9))
-    A.putstone((9,11))
-    A.putstone((8,10))
-    A.putstone((8,11))
+    A.put_stone((10,10))
+    A.put_stone((9,10))
+    A.put_stone((9,9))
+    A.put_stone((8,9))
+    A.put_stone((9,11))
+    A.put_stone((8,10))
+    A.put_stone((8,11))
     print(str(A))

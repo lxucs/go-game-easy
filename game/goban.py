@@ -82,7 +82,7 @@ class Board(go.Board):
         pygame.display.update()
         
 def main(board):
-    board.putstone((10,10))
+    board.put_stone((10,10))
     draw((10,10),go.opponent_color(board.next))
     legalmove=[]
     legalmoveon=False
@@ -107,23 +107,23 @@ def main(board):
                     if stone:
                         continue
                     else:
-                        if board.putstone(point,checklegal=True):
+                        if board.put_stone(point,check_legal=True):
                             if legalmoveon:
                                 for movement in legalmove:
                                     remove(movement)
                                     legalmoveon=False
                             draw(point,go.opponent_color(board.next))
                             if board.winner:
-                                for point in board.removedgroup.points: 
+                                for point in board.removed_group.points:
                                     remove(point)
                             else:
-                                legalmove=board.getLegalAction()
+                                legalmove=board.get_legal_action()
                                 if isinstance(legalmove,tuple):
                                     legalmove=[legalmove]
                                 else:
                                     legalmove=list(legalmove)
                                 #aaa=board.generateSuccessorState(legalmove[0])
-                                #aaa.putstone(aaa.randommove())
+                                #aaa.put_stone(aaa.randommove())
                                 legalmoveon=True
                                 for point in legalmove:
                                     draw(point,BLUE,8)
