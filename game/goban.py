@@ -12,7 +12,7 @@ __author__ = "Aku Kotkavuo <aku@hibana.net>"
 __version__ = "0.1"
 
 import pygame
-import go
+import game.go as go
 from sys import exit
 
 
@@ -83,7 +83,7 @@ class Board(go.Board):
         
 def main(board):
     board.putstone((10,10))
-    draw((10,10),go.opponentcolor(board.next))
+    draw((10,10),go.opponent_color(board.next))
     legalmove=[]
     legalmoveon=False
     while True:
@@ -112,7 +112,7 @@ def main(board):
                                 for movement in legalmove:
                                     remove(movement)
                                     legalmoveon=False
-                            draw(point,go.opponentcolor(board.next))
+                            draw(point,go.opponent_color(board.next))
                             if board.winner:
                                 for point in board.removedgroup.points: 
                                     remove(point)
