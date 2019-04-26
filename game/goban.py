@@ -103,7 +103,7 @@ def main(board):
                     x = int(round(((event.pos[0] - 5) / 40.0), 0))
                     y = int(round(((event.pos[1] - 5) / 40.0), 0))
                     point=(x,y)
-                    stone = board.search(point=(x, y))
+                    stone = board.exist_stone(point=(x, y))
                     if stone:
                         continue
                     else:
@@ -114,8 +114,9 @@ def main(board):
                                     legalmoveon=False
                             draw(point,go.opponent_color(board.next))
                             if board.winner:
-                                for point in board.removed_group.points:
-                                    remove(point)
+                                for group in board.removed_groups:
+                                    for point in group.points:
+                                        remove(point)
                             else:
                                 legalmove=board.get_legal_action()
                                 if isinstance(legalmove,tuple):
