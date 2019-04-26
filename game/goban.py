@@ -9,11 +9,9 @@ pygame-related activities. Together they form a fully working goban.
 """
 
 __author__ = "Aku Kotkavuo <aku@hibana.net>"
-__version__ = "0.1"
 
 import pygame
 import game.go as go
-from sys import exit
 
 
 BACKGROUND = 'images/ramin.jpg'
@@ -131,6 +129,8 @@ def main(board):
                                 
                                 
                 print(str(board))
+
+
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Goban')

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from copy import deepcopy
+from game.util import PointDict
 
 
 BOARD_SIZE = 20  # number of rows/cols = BOARD_SIZE - 1
@@ -27,7 +28,7 @@ def neighbors(point):
 def cal_liberty(points, board):
     """Find and return the liberties of the point."""
     liberties = [point for point in neighbors(points)
-                 if not board.stonedict['BLACK'][point] and not board.stonedict['WHITE'][point]]
+                 if not board.stonedict.get_groups('BLACK', point) and not board.stonedict.get_groups('WHITE', point)]
     return set(liberties)
 
 
@@ -66,20 +67,6 @@ class Group(object):
     
     def __repr__(self):
         return str(self)
-    
-    def __eq__(self, other):
-        if not hasattr(other,'poinst') or len(self.points)!=len(other.points):
-            return False
-        for stone1,stone2 in zip(self.points,other.point):
-            if stone1!=stone2:
-                return False
-        return True
-    
-    def __hash__(self):
-        num=0
-        for idx,stone in enumerate(self.points):
-            num+=hash(stone)*(13**idx)
-        return hash(num)
 
 
 class Board(object):
@@ -89,44 +76,18 @@ class Board(object):
     create_group(), remove_group(), merge_groups() operations don't check winner or endangered groups.
     winner or endangered groups are updated in put_stone().
     """
-    def __init__(self, initial_color='BLACK'):
+    def __init__(self, next_color='BLACK'):
         self.winner = None
-        self.next = initial_color
+        self.next = next_color
 
         # Point dict
-        self.libertydict = {'BLACK': {}, 'WHITE': {}}  # {color: {point: {groups}}}
-        self.stonedict = {'BLACK': {}, 'WHITE': {}}
+        self.libertydict = PointDict()  # {color: {point: {groups}}}
+        self.stonedict = PointDict()
 
         # Group list
         self.groups = {'BLACK': [], 'WHITE': []}
         self.endangered_groups = []  # groups with only 1 liberty
         self.removed_groups = []  # This is assigned when game ends
-
-        for i in range(1, BOARD_SIZE):
-            for j in range(1, BOARD_SIZE):
-                self.libertydict['BLACK'][(i, j)]=[]
-                self.libertydict['WHITE'][(i, j)]=[]
-                self.stonedict['BLACK'][(i, j)]=[]
-                self.stonedict['WHITE'][(i, j)]=[]
-
-    # TODO
-    def print_liberties(self):
-        """Show the liberty of each group"""
-        result = {}
-        for point, grouplist in self.libertydict['BLACK'].items():
-            for group in grouplist:
-                if str(group) not in result:
-                    result[str(group)]=[]
-                result[str(group)].append(point)
-        for point,grouplist in self.libertydict['WHITE'].items():
-            for group in grouplist:
-                if str(group) not in result:
-                    result[str(group)]=[]
-                result[str(group)].append(point)
-        resultstr=''
-        for groupname,pointlist in result.items():
-            resultstr+=groupname+' '+str(pointlist)+'\n'
-        return resultstr
                 
     def create_group(self, point, color):
         """Create a new group."""
@@ -138,14 +99,19 @@ class Board(object):
         if len(group.liberties) <= 1:
             self.endangered_groups.append(group)
         # Update stonedict
-        self.stonedict[color][point].append(group)
+        self.stonedict.get_groups(color, point).append(group)
         # Update libertydict
         for liberty in group.liberties:
-            self.libertydict[color][liberty].append(group)
+            self.libertydict.get_groups(color, liberty).append(group)
         return group
       
     def remove_group(self, group):
-        """Remove the group."""
+        """
+        Remove the group.
+        Ignore libertydict since it is the end of game.
+        :param group:
+        :return:
+        """
         color = group.color
         # Update group list
         self.groups[group.color].remove(group)
@@ -154,18 +120,13 @@ class Board(object):
             self.endangered_groups.remove(group)
         # Update stonedict
         for point in group.points:
-            self.stonedict[color][point].remove(group)
-        # Update libertydict
-        for liberty in group.liberties:
-            self.libertydict[color][liberty].remove(group)
-        # Update endangered group
-        if group in self.endangered_groups:
-            self.endangered_groups.remove(group)
+            self.stonedict.get_groups(color, point).remove(group)
 
     def merge_groups(self, grouplist, point):
         """
         Merge groups (assuming same color).
-        Called by put_stone(); all groups already have this liberty removed.
+        all groups already have this liberty removed;
+        libertydict already has this point removed.
         :param grouplist:
         :param point:
         """
@@ -175,14 +136,14 @@ class Board(object):
 
         # Add last move (update newgroup and stonedict)
         newgroup.add_stones([point])
-        self.stonedict[color][point].append(newgroup)
+        self.stonedict.get_groups(color, point).append(newgroup)
         all_liberties = all_liberties | cal_liberty(point, self)
 
         # Merge with other groups (update newgroup and stonedict)
         for group in grouplist[1:]:
             newgroup.add_stones(group.points)
             for p in group.points:
-                self.stonedict[color][p].append(newgroup)
+                self.stonedict.get_groups(color, p).append(newgroup)
             all_liberties = all_liberties | group.liberties
             self.remove_group(group)
 
@@ -190,11 +151,10 @@ class Board(object):
         newgroup.liberties = all_liberties
 
         # Update libertydict
-        self.libertydict[color][point] = []
-        self.libertydict[opponent_color(color)][point] = []
         for point in all_liberties:
-            if newgroup not in self.libertydict[color][point]:
-                self.libertydict[color][point].append(newgroup)
+            belonging_groups = self.libertydict.get_groups(color, point)
+            if newgroup not in belonging_groups:
+                belonging_groups.append(newgroup)
 
         return newgroup
 
@@ -237,15 +197,15 @@ class Board(object):
 
         # Check opponent's groups first
         opponent = opponent_color(color)
-        for group in self.libertydict[opponent][point]:
+        for group in self.libertydict.get_groups(opponent, point):
             shorten_liberty(group, point, color)
-        self.libertydict[opponent][point] = []  # update libertydict
+        self.libertydict.remove_point(opponent, point)  # update libertydict
 
         # If any opponent's group dies, no need to check self group
         if not self.winner:
-            for group in self.libertydict[color][point]:
+            for group in self.libertydict.get_groups(color, point):
                 shorten_liberty(group, point, color)
-        self.libertydict[color][point] = []  # update libertydict
+        self.libertydict.remove_point(color, point)  # update libertydict
     
     def put_stone(self, point, check_legal=False):
         if check_legal:
@@ -257,7 +217,7 @@ class Board(object):
                 return False
 
         # Get all self-groups containing this liberty
-        self_belonging_groups = self.libertydict[self.next][point].copy()
+        self_belonging_groups = self.libertydict.get_groups(self.next, point).copy()
 
         # Remove the liberty from all belonging groups (with consequences updated such as winner)
         self.shorten_liberty_for_groups(point, self.next)
@@ -294,19 +254,41 @@ class Board(object):
 
     def exist_stone(self, point):
         """To see if a stone has been placed on the board"""
-        return self.stonedict['BLACK'][point] or self.stonedict['WHITE'][point]
+        return self.stonedict.get_groups('BLACK', point) or self.stonedict.get_groups('WHITE', point)
 
     def copy(self):
-        return deepcopy(self)
+        board = Board(self.next)
+        board.winner = self.winner
+
+        group_mapping = {group: deepcopy(group) for group in self.groups['BLACK'] + self.groups['WHITE']}
+        board.groups['BLACK'] = [group_mapping[group] for group in self.groups['BLACK']]
+        board.groups['WHITE'] = [group_mapping[group] for group in self.groups['WHITE']]
+
+        board.endangered_groups = [group_mapping[group] for group in self.endangered_groups]
+        board.removed_groups = [group_mapping[group] for group in self.removed_groups]
+
+        for point, groups in self.libertydict.get_items('BLACK'):
+            if groups:
+                board.libertydict.set_groups('BLACK', point, [group_mapping[group] for group in groups])
+        for point, groups in self.libertydict.get_items('WHITE'):
+            if groups:
+                board.libertydict.set_groups('WHITE', point, [group_mapping[group] for group in groups])
+
+        for point, groups in self.stonedict.get_items('BLACK'):
+            if groups:
+                board.stonedict.set_groups('BLACK', point, [group_mapping[group] for group in groups])
+        for point, groups in self.stonedict.get_items('WHITE'):
+            if groups:
+                board.stonedict.set_groups('WHITE', point, [group_mapping[group] for group in groups])
     
 
-if __name__=='__main__':  
-    A=Board()
-    A.put_stone((10,10))
-    A.put_stone((9,10))
-    A.put_stone((9,9))
-    A.put_stone((8,9))
-    A.put_stone((9,11))
-    A.put_stone((8,10))
-    A.put_stone((8,11))
-    print(str(A))
+if __name__ == '__main__':
+    A = Board()
+    A.put_stone((10, 10))
+    A.put_stone((9, 10))
+    A.put_stone((9, 9))
+    A.put_stone((8, 9))
+    A.put_stone((9, 11))
+    A.put_stone((8, 10))
+    A.put_stone((8, 11))
+    print(A)
