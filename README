@@ -1,5 +1,0 @@
-A "mini" version of Go game in Python, with more constraints on legal moves, and simpler winning condition.
-
-GUI is provided for human to play.
-
-Different AI agents are also provides.
