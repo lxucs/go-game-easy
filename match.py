@@ -16,11 +16,12 @@ class Match:
         self.agent_black = agent_black
         self.agent_white = agent_white
 
+        self.board = Board(next_color='BLACK')
+
         gui = gui if agent_black and agent_white else True
         self.ui = UI() if gui else None
 
-        self.board = Board(next_color='BLACK')
-
+        # Metadata
         self.counter_move = 0
         self.time_elapsed = time.time()
 
@@ -108,8 +109,10 @@ class Match:
 
 
 if __name__ == '__main__':
-    match = Match()
+    # match = Match()
     # match = Match(agent_black=RandomAgent('BLACK'))
+    match = Match(agent_white=RandomAgent('WHITE'))
+    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
     match.start_with_ui()
     print(match.winner + ' wins!')
     print('Match ends in ' + str(match.time_elapsed) + ' s')

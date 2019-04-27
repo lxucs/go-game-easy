@@ -279,6 +279,7 @@ class Board(object):
         return len(self.stonedict.get_groups('BLACK', point)) > 0 or len(self.stonedict.get_groups('WHITE', point)) > 0
 
     def copy(self):
+        """Manual copy because of group dependencies across self variables"""
         board = Board(self.next)
         board.winner = self.winner
 
