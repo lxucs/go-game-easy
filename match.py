@@ -1,28 +1,32 @@
 from game.go import Board, opponent_color
 from game.ui import UI
 import pygame
+import time
 from agent.ai_agent import RandomAgent
 
 
-class Arena:
-    def __init__(self, agent_black=None, agent_white=None, GUI=True):
+class Match:
+    def __init__(self, agent_black=None, agent_white=None, gui=True):
         """
         BLACK always has the first move on the center of the board.
         :param agent_black: agent or None(human)
         :param agent_white: agent or None(human)
-        :param GUI: if show GUI; always true if there are human agents
+        :param gui: if show GUI; always true if there are human agents
         """
         self.agent_black = agent_black
         self.agent_white = agent_white
 
-        GUI = GUI if agent_black and agent_white else True
-        self.ui = UI() if GUI else None
+        gui = gui if agent_black and agent_white else True
+        self.ui = UI() if gui else None
 
         self.board = Board(next_color='BLACK')
-        self.winner = None
 
         self.counter_move = 0
-        self.time_elapsed = None
+        self.time_elapsed = time.time()
+
+    @property
+    def winner(self):
+        return self.board.winner
 
     def start_with_ui(self):
         self.ui.initialize()
@@ -30,10 +34,11 @@ class Arena:
         # First move is fixed on the center of board
         first_move = (10, 10)
         self.board.put_stone(first_move, check_legal=False)
-        self.ui.draw(first_move, self.board.next)
+        self.ui.draw(first_move, opponent_color(self.board.next))
         self.ui.legal_actions = self.board.get_legal_actions()
 
-        while self.board.winner is not None:
+        # Take turns to play move
+        while self.board.winner is None:
             if self.board.next == 'BLACK':
                 point = self.perform_one_move(self.agent_black)
             else:
@@ -45,6 +50,7 @@ class Arena:
 
             # Apply action
             self.board.put_stone(point, check_legal=False)
+            self.counter_move += 1
             # Remove previous legal actions on board
             for action in self.ui.legal_actions:
                 self.ui.remove(action)
@@ -61,11 +67,13 @@ class Arena:
                 for action in self.ui.legal_actions:
                     self.ui.draw(action, 'BLUE', 8)
 
+        self.time_elapsed = time.time() - self.time_elapsed
+
     def perform_one_move(self, agent):
         if agent:
             return self._move_by_agent(agent)
         else:
-            return self._move_by_human(agent)
+            return self._move_by_human()
 
     def _move_by_agent(self, agent):
         return agent.get_action(self.board)
@@ -84,9 +92,11 @@ class Arena:
                         point = (x, y)
                         stone = self.board.exist_stone(point)
                         if not stone:
-                            return stone
+                            return point
 
 
 if __name__ == '__main__':
-    arena = Arena()
-    arena.start_with_ui()
+    match = Match(agent_black=RandomAgent('BLACK'))
+    match.start_with_ui()
+    print(match.winner + ' wins!')
+    print('Match ends in ' + str(match.time_elapsed) + ' s')

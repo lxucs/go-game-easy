@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 import pygame
-import game.go as go
 
 BACKGROUND = 'game/images/ramin.jpg'
 BOARD_SIZE = (820, 820)
@@ -65,47 +63,3 @@ class UI:
         area_rect = pygame.Rect(blit_coords, (40, 40))
         self.screen.blit(self.background, blit_coords, area_rect)
         pygame.display.update()
-
-
-def main(ui, board):
-    board.put_stone((10, 10))
-    ui.draw((10, 10), go.opponent_color(board.next))
-    while True:
-        pygame.time.wait(250)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if board.winner:
-                    pygame.quit()
-                    return board.winner
-                if event.button == 1 and ui.outline.collidepoint(event.pos):
-                    x = int(round(((event.pos[0] - 5) / 40.0), 0))
-                    y = int(round(((event.pos[1] - 5) / 40.0), 0))
-                    point = (x, y)
-                    stone = board.exist_stone(point=(x, y))
-                    if stone:
-                        continue
-                    else:
-                        if board.put_stone(point, check_legal=True):
-                            for action in ui.legal_actions:
-                                    ui.remove(action)
-                            ui.legal_actions = []
-                            ui.draw(point, go.opponent_color(board.next))
-                            if board.winner:
-                                for group in board.removed_groups:
-                                    for point in group.points:
-                                        ui.remove(point)
-                            else:
-                                ui.legal_actions = board.get_legal_actions()
-                                for action in ui.legal_actions:
-                                    ui.draw(action, 'BLUE', 8)
-
-                print(str(board))
-
-
-if __name__ == '__main__':
-    board = go.Board()
-    ui = UI()
-    main(ui, board)

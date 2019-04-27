@@ -229,7 +229,6 @@ class Board(object):
         # Remove the liberty from all belonging groups (with consequences updated such as winner)
         self.shorten_liberty_for_groups(point, self.next)
         if self.winner:
-            print(self.winner + ' wins!')
             self.next = opponent_color(self.next)
             return True
 
@@ -260,7 +259,7 @@ class Board(object):
 
     def exist_stone(self, point):
         """To see if a stone has been placed on the board"""
-        return self.stonedict.get_groups('BLACK', point) or self.stonedict.get_groups('WHITE', point)
+        return len(self.stonedict.get_groups('BLACK', point)) > 0 or len(self.stonedict.get_groups('WHITE', point)) > 0
 
     def copy(self):
         board = Board(self.next)
