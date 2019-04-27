@@ -71,7 +71,7 @@ class Group(object):
 
 class Board(object):
     """
-    get_legal_action(), generate_successor_state() are the external game interface.
+    get_legal_actions(), generate_successor_state() are the external game interface.
     put_stone() is the main internal method that contains all logic to update game state.
     create_group(), remove_group(), merge_groups() operations don't check winner or endangered groups.
     winner or endangered groups are updated in put_stone().
@@ -158,20 +158,29 @@ class Board(object):
 
         return newgroup
 
-    def get_legal_action(self):
-        endangered_liberties = set()
+    def get_legal_actions(self):
+        """Return a list of legal actions."""
+        endangered_lbt_self = set()
+        endangered_lbt_opponent = set()
         for group in self.endangered_groups:
             if group.color == self.next:
-                endangered_liberties = endangered_liberties | group.liberties
+                endangered_lbt_self = endangered_lbt_self | group.liberties
             else:
-                return list(group.liberties)[0]  # Return the winning position directly
+                endangered_lbt_opponent = endangered_lbt_opponent | group.liberties
 
-        if len(endangered_liberties) > 1:
-            return endangered_liberties  # Return the set to indicate you lose
+        # If there are opponent's endangered points, return these points to win
+        if len(endangered_lbt_opponent) > 0:
+            return list(endangered_lbt_opponent)
 
-        # No win or lose now; return a list of valid moves
-        if len(endangered_liberties) == 1:
-            return list(endangered_liberties)  # Must rescue your sole endangered liberty in this move
+        # If there are more than one self endangered points, return these points (losing the game)
+        if len(endangered_lbt_self) > 1:
+            return list(endangered_lbt_self)
+
+        # Rescue the sole endangered liberty if existing
+        if len(endangered_lbt_self) == 1:
+            return list(endangered_lbt_self)
+
+        # Return legal actions
         legal_actions = set()
         for group in self.groups[opponent_color(self.next)]:
             legal_actions = legal_actions | group.liberties
@@ -209,9 +218,7 @@ class Board(object):
     
     def put_stone(self, point, check_legal=False):
         if check_legal:
-            legal_actions = self.get_legal_action()
-            if isinstance(legal_actions, tuple):
-                legal_actions = [legal_actions]
+            legal_actions = self.get_legal_actions()
             if point not in legal_actions:
                 print('Error: illegal move, try again.')
                 return False
@@ -221,7 +228,6 @@ class Board(object):
 
         # Remove the liberty from all belonging groups (with consequences updated such as winner)
         self.shorten_liberty_for_groups(point, self.next)
-        print(self.winner, '@@@@')
         if self.winner:
             print(self.winner + ' wins!')
             self.next = opponent_color(self.next)
@@ -280,6 +286,8 @@ class Board(object):
         for point, groups in self.stonedict.get_items('WHITE'):
             if groups:
                 board.stonedict.set_groups('WHITE', point, [group_mapping[group] for group in groups])
+
+        return board
     
 
 if __name__ == '__main__':

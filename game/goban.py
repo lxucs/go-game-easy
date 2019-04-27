@@ -116,11 +116,7 @@ def main(board):
                                     for point in group.points:
                                         remove(point)
                             else:
-                                legalmove=board.get_legal_action()
-                                if isinstance(legalmove,tuple):
-                                    legalmove=[legalmove]
-                                else:
-                                    legalmove=list(legalmove)
+                                legalmove=board.get_legal_actions()
                                 #aaa=board.generateSuccessorState(legalmove[0])
                                 #aaa.put_stone(aaa.randommove())
                                 legalmoveon=True
