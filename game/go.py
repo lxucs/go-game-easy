@@ -108,19 +108,21 @@ class Board(object):
     def remove_group(self, group):
         """
         Remove the group.
-        Ignore libertydict since it is the end of game.
         :param group:
         :return:
         """
         color = group.color
         # Update group list
-        self.groups[group.color].remove(group)
+        self.groups[color].remove(group)
         # Update endangered_groups
         if group in self.endangered_groups:
             self.endangered_groups.remove(group)
         # Update stonedict
         for point in group.points:
             self.stonedict.get_groups(color, point).remove(group)
+        # Update libertydict
+        for liberty in group.liberties:
+            self.libertydict.get_groups(color, liberty).remove(group)
 
     def merge_groups(self, grouplist, point):
         """
@@ -172,19 +174,43 @@ class Board(object):
         if len(endangered_lbt_opponent) > 0:
             return list(endangered_lbt_opponent)
 
-        # If there are more than one self endangered points, return these points (losing the game)
-        if len(endangered_lbt_self) > 1:
-            return list(endangered_lbt_self)
+        legal_actions = []
+        if len(endangered_lbt_self) > 0:
+            # If there are more than one self endangered points, return these points (losing the game)
+            if len(endangered_lbt_self) > 1:
+                legal_actions = list(endangered_lbt_self)
+            # Rescue the sole endangered liberty if existing
+            if len(endangered_lbt_self) == 1:
+                legal_actions = list(endangered_lbt_self)
+        else:
+            legal_actions = set()
+            for group in self.groups[opponent_color(self.next)]:
+                legal_actions = legal_actions | group.liberties
+            legal_actions = list(legal_actions)
 
-        # Rescue the sole endangered liberty if existing
-        if len(endangered_lbt_self) == 1:
-            return list(endangered_lbt_self)
+        # Final check: no suicidal move, either has liberties or any connected self-group has more than this liberty
+        legal_actions_filtered = []
+        for action in legal_actions:
+            if len(cal_liberty(action, self)) > 0:
+                legal_actions_filtered.append(action)
+            else:
+                connected_self_groups = [self.stonedict.get_groups(self.next, p)[0] for p in neighbors(action)
+                                         if self.stonedict.get_groups(self.next, p)]
+                for self_group in connected_self_groups:
+                    if len(self_group.liberties) > 1:
+                        legal_actions_filtered.append(action)
+                        break
 
-        # Return legal actions
-        legal_actions = set()
-        for group in self.groups[opponent_color(self.next)]:
-            legal_actions = legal_actions | group.liberties
-        return list(legal_actions)
+        return legal_actions_filtered
+
+    def _shorten_liberty(self, group, point, color):
+        group.remove_liberty(point)
+        if group.color != color:  # If opponent's group, check if winning or endangered groups
+            if len(group.liberties) == 0:  # The new stone is opponent's, check if winning
+                self.removed_groups.append(group)  # Set removed_group
+                self.winner = opponent_color(group.color)
+            elif len(group.liberties) == 1:
+                self.endangered_groups.append(group)
 
     def shorten_liberty_for_groups(self, point, color):
         """
@@ -195,25 +221,16 @@ class Board(object):
         :param color:
         :return:
         """
-        def shorten_liberty(group, point, color):
-            group.remove_liberty(point)
-            if group.color != color:  # If opponent's group, check if winning or endangered groups
-                if len(group.liberties) == 0:  # The new stone is opponent's, check winning status
-                    self.removed_groups.append(group)  # Set removed_group
-                    self.winner = opponent_color(group.color)
-                elif len(group.liberties) == 1:
-                    self.endangered_groups.append(group)
-
         # Check opponent's groups first
         opponent = opponent_color(color)
         for group in self.libertydict.get_groups(opponent, point):
-            shorten_liberty(group, point, color)
+            self._shorten_liberty(group, point, color)
         self.libertydict.remove_point(opponent, point)  # update libertydict
 
         # If any opponent's group dies, no need to check self group
         if not self.winner:
             for group in self.libertydict.get_groups(color, point):
-                shorten_liberty(group, point, color)
+                self._shorten_liberty(group, point, color)
         self.libertydict.remove_point(color, point)  # update libertydict
     
     def put_stone(self, point, check_legal=False):

@@ -11,7 +11,7 @@ class Match:
         BLACK always has the first move on the center of the board.
         :param agent_black: agent or None(human)
         :param agent_white: agent or None(human)
-        :param gui: if show GUI; always true if there are human agents
+        :param gui: if show GUI; always true if there are human playing
         """
         self.agent_black = agent_black
         self.agent_white = agent_white
@@ -28,7 +28,16 @@ class Match:
     def winner(self):
         return self.board.winner
 
+    @property
+    def next(self):
+        return self.board.next
+
+    @property
+    def legal_actions(self):
+        return self.ui.legal_actions
+
     def start_with_ui(self):
+        """Start the game with UI."""
         self.ui.initialize()
 
         # First move is fixed on the center of board
@@ -64,6 +73,9 @@ class Match:
                 self.ui.legal_actions = []
             else:
                 self.ui.legal_actions = self.board.get_legal_actions()
+                if len(self.ui.legal_actions) == 0:
+                    self.board.winner = opponent_color(self.board.next)
+                    print('Game ends early (no legal action is available for %s)' % self.board.next)
                 for action in self.ui.legal_actions:
                     self.ui.draw(action, 'BLUE', 8)
 
@@ -96,7 +108,8 @@ class Match:
 
 
 if __name__ == '__main__':
-    match = Match(agent_black=RandomAgent('BLACK'))
+    match = Match()
+    # match = Match(agent_black=RandomAgent('BLACK'))
     match.start_with_ui()
     print(match.winner + ' wins!')
     print('Match ends in ' + str(match.time_elapsed) + ' s')
