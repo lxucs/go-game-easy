@@ -25,7 +25,6 @@ class Match:
         self.dir_save = dir_save
 
         # Metadata
-        self.counter_move = 0
         self.time_elapsed = None
 
     @property
@@ -36,13 +35,17 @@ class Match:
     def next(self):
         return self.board.next
 
+    @property
+    def counter_move(self):
+        return self.board.counter_move
+
     def start(self):
         if self.ui:
-            self.start_with_ui()
+            self._start_with_ui()
         else:
-            self.start_without_ui()
+            self._start_without_ui()
 
-    def start_with_ui(self):
+    def _start_with_ui(self):
         """Start the game with GUI."""
         self.ui.initialize()
         self.time_elapsed = time.time()
@@ -66,7 +69,6 @@ class Match:
 
             # Apply action
             self.board.put_stone(point, check_legal=False)
-            self.counter_move += 1
             # Remove previous legal actions on board
             for action in self.ui.legal_actions:
                 self.ui.remove(action)
@@ -92,7 +94,7 @@ class Match:
             self.ui.save_image(path_file)
             print('Board image saved in file ' + path_file)
 
-    def start_without_ui(self):
+    def _start_without_ui(self):
         """Start the game without GUI. Only possible when no human is playing."""
         # First move is fixed on the center of board
         self.time_elapsed = time.time()
@@ -113,7 +115,6 @@ class Match:
 
             # Apply action
             self.board.put_stone(point, check_legal=False)  # Assuming agent always gives legal actions
-            self.counter_move += 1
 
         self.time_elapsed = time.time() - self.time_elapsed
 
@@ -153,4 +154,5 @@ if __name__ == '__main__':
     match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
     match.start()
     print(match.winner + ' wins!')
-    print('Match ends in ' + str(match.time_elapsed) + ' s')
+    print('Match ends in ' + str(match.time_elapsed) + ' seconds')
+    print('Match ends in ' + str(match.counter_move) + ' moves')

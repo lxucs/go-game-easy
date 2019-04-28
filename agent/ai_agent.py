@@ -22,6 +22,25 @@ class RandomAgent(Agent):
         return random.choice(actions) if actions else None
 
 
+class SearchAgent(Agent):
+    def __init__(self, color, eval_func):
+        super().__init__(color)
+        self.eval_func = eval_func
+
+    def get_action(self, board):
+        raise NotImplementedError
+
+
+class TestSearchAgent(SearchAgent):
+    def __init__(self, color, eval_func):
+        super().__init__(color, eval_func)
+
+    def get_action(self, board):
+        score = self.eval_func(board, self.color)
+        actions = board.get_legal_actions()
+        return random.choice(actions) if actions else None
+
+
 if __name__ == '__main__':
     agent = Agent('BLACK')
     agent.get_action(None)

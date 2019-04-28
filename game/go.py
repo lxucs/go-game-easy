@@ -79,6 +79,7 @@ class Board(object):
     def __init__(self, next_color='BLACK'):
         self.winner = None
         self.next = next_color
+        self.counter_move = 0
 
         # Point dict
         self.libertydict = PointDict()  # {color: {point: {groups}}}
@@ -245,6 +246,7 @@ class Board(object):
 
         # Remove the liberty from all belonging groups (with consequences updated such as winner)
         self.shorten_liberty_for_groups(point, self.next)
+        self.counter_move += 1
         if self.winner:
             self.next = opponent_color(self.next)
             return True
