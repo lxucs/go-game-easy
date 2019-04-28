@@ -1,4 +1,7 @@
 import pygame
+"""
+This file is the GUI on top of the game backend.
+"""
 
 BACKGROUND = 'game/images/ramin.jpg'
 BOARD_SIZE = (820, 820)
@@ -27,7 +30,6 @@ class UI:
     def __init__(self):
         """Create, initialize and draw an empty board."""
         self.outline = pygame.Rect(45, 45, 720, 720)
-        self.legal_actions = []
         self.screen = None
         self.background = None
 

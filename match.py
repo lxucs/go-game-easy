@@ -2,7 +2,7 @@ from game.go import Board, opponent_color
 from game.ui import UI
 import pygame
 import time
-from agent.ai_agent import RandomAgent
+from agent.basic_agent import RandomAgent
 from os.path import join
 
 
@@ -54,7 +54,6 @@ class Match:
         first_move = (10, 10)
         self.board.put_stone(first_move, check_legal=False)
         self.ui.draw(first_move, opponent_color(self.board.next))
-        self.ui.legal_actions = self.board.get_legal_actions()
 
         # Take turns to play move
         while self.board.winner is None:
@@ -64,28 +63,26 @@ class Match:
                 point = self.perform_one_move(self.agent_white)
 
             # Check if action is legal
-            if point not in self.ui.legal_actions:
+            if point not in self.board.legal_actions:
                 continue
 
             # Apply action
+            prev_legal_actions = self.board.legal_actions.copy()
             self.board.put_stone(point, check_legal=False)
             # Remove previous legal actions on board
-            for action in self.ui.legal_actions:
+            for action in prev_legal_actions:
                 self.ui.remove(action)
             # Draw new point
             self.ui.draw(point, opponent_color(self.board.next))
-            # Update legal actions and removed groups
+            # Update new legal actions and any removed groups
             if self.board.winner:
                 for group in self.board.removed_groups:
                     for point in group.points:
                         self.ui.remove(point)
-                self.ui.legal_actions = []
-            else:
-                self.ui.legal_actions = self.board.get_legal_actions()
-                if len(self.ui.legal_actions) == 0:
-                    self.board.winner = opponent_color(self.board.next)
+                if self.board.end_by_no_legal_actions:
                     print('Game ends early (no legal action is available for %s)' % self.board.next)
-                for action in self.ui.legal_actions:
+            else:
+                for action in self.board.legal_actions:
                     self.ui.draw(action, 'BLUE', 8)
 
         self.time_elapsed = time.time() - self.time_elapsed
@@ -108,13 +105,11 @@ class Match:
             else:
                 point = self.perform_one_move(self.agent_white)
 
-            if point is None:
-                self.board.winner = opponent_color(self.board.next)
-                print('Game ends early (no legal action is available for %s)' % self.board.next)
-                break
-
             # Apply action
             self.board.put_stone(point, check_legal=False)  # Assuming agent always gives legal actions
+
+        if self.board.end_by_no_legal_actions:
+            print('Game ends early (no legal action is available for %s)' % self.board.next)
 
         self.time_elapsed = time.time() - self.time_elapsed
 

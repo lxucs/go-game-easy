@@ -1,5 +1,5 @@
 from match import Match
-from agent.ai_agent import RandomAgent, TestSearchAgent
+from agent.basic_agent import RandomAgent, GreedyAgent
 from agent.evaluation import evaluate
 from statistics import mean
 
@@ -43,7 +43,7 @@ class Benchmark:
 
 
 if __name__ == '__main__':
-    agent_self = RandomAgent('BLACK')
+    agent_self = GreedyAgent('BLACK')
     agent_oppo = RandomAgent('WHITE')
 
     benchmark = Benchmark(agent_self=agent_self, agent_oppo=agent_oppo)

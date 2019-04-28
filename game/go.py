@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 from copy import deepcopy
 from game.util import PointDict
-
+"""
+This file is the full backend environment of the game.
+"""
 
 BOARD_SIZE = 20  # number of rows/cols = BOARD_SIZE - 1
 
@@ -74,11 +76,14 @@ class Board(object):
     get_legal_actions(), generate_successor_state() are the external game interface.
     put_stone() is the main internal method that contains all logic to update game state.
     create_group(), remove_group(), merge_groups() operations don't check winner or endangered groups.
-    winner or endangered groups are updated in put_stone().
+    Winner or endangered groups are updated in put_stone().
+    Winning criteria: remove any opponent's group, or no legal actions for opponent.
     """
     def __init__(self, next_color='BLACK'):
         self.winner = None
         self.next = next_color
+        self.legal_actions = []  # Legal actions for current state
+        self.end_by_no_legal_actions = False
         self.counter_move = 0
 
         # Point dict
@@ -163,6 +168,9 @@ class Board(object):
 
     def get_legal_actions(self):
         """Return a list of legal actions."""
+        if self.winner:
+            return []
+
         endangered_lbt_self = set()
         endangered_lbt_opponent = set()
         for group in self.endangered_groups:
@@ -236,8 +244,7 @@ class Board(object):
     
     def put_stone(self, point, check_legal=False):
         if check_legal:
-            legal_actions = self.get_legal_actions()
-            if point not in legal_actions:
+            if point not in self.legal_actions:
                 print('Error: illegal move, try again.')
                 return False
 
@@ -265,6 +272,13 @@ class Board(object):
             self.endangered_groups.append(new_group)
 
         self.next = opponent_color(self.next)
+
+        # Update legal_actions; if there are no legal actions for opponent, claim winning
+        self.legal_actions = self.get_legal_actions()
+        if not self.legal_actions:
+            self.winner = opponent_color(self.next)
+            self.end_by_no_legal_actions = True
+
         return True
     
     def generate_successor_state(self, action):
