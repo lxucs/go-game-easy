@@ -1,5 +1,6 @@
 from match import Match
 from agent.basic_agent import RandomAgent, GreedyAgent
+from agent.search_agent import AlphaBetaAgent, ExpectimaxAgent
 from agent.evaluation import evaluate
 from statistics import mean
 
@@ -29,6 +30,7 @@ class Benchmark:
         list_time_elapsed = []
 
         for i in range(num_tests):
+            # print('Running game ' + str(i))
             match = self.create_match()
             match.start()
 
@@ -43,8 +45,12 @@ class Benchmark:
 
 
 if __name__ == '__main__':
-    agent_self = GreedyAgent('BLACK')
+    # agent_self = GreedyAgent('BLACK')
+    # agent_self = AlphaBetaAgent('BLACK', evaluate, 2)
+    agent_self = ExpectimaxAgent('BLACK', evaluate, 2)
+
     agent_oppo = RandomAgent('WHITE')
+    # agent_oppo = GreedyAgent('WHITE')
 
     benchmark = Benchmark(agent_self=agent_self, agent_oppo=agent_oppo)
     win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(5000)
