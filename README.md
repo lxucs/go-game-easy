@@ -5,3 +5,5 @@ An "easier" version of Go game implemented in Python, with more constraints on l
 GUI is provided for human to play.
 
 Different AI agents are also provided.
+
+Game rules and usage will be edited later.

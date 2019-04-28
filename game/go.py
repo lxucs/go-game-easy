@@ -305,15 +305,3 @@ class Board(object):
                 board.stonedict.set_groups('WHITE', point, [group_mapping[group] for group in groups])
 
         return board
-    
-
-if __name__ == '__main__':
-    A = Board()
-    A.put_stone((10, 10))
-    A.put_stone((9, 10))
-    A.put_stone((9, 9))
-    A.put_stone((8, 9))
-    A.put_stone((9, 11))
-    A.put_stone((8, 10))
-    A.put_stone((8, 11))
-    print(A)

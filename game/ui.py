@@ -63,3 +63,6 @@ class UI:
         area_rect = pygame.Rect(blit_coords, (40, 40))
         self.screen.blit(self.background, blit_coords, area_rect)
         pygame.display.update()
+
+    def save_image(self, path_to_save):
+        pygame.image.save(self.screen, path_to_save)
