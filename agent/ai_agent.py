@@ -19,7 +19,7 @@ class RandomAgent(Agent):
 
     def get_action(self, board):
         actions = board.get_legal_actions()
-        return random.choice(actions)
+        return random.choice(actions) if actions else None
 
 
 if __name__ == '__main__':

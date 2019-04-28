@@ -26,7 +26,7 @@ class Match:
 
         # Metadata
         self.counter_move = 0
-        self.time_elapsed = time.time()
+        self.time_elapsed = None
 
     @property
     def winner(self):
@@ -36,13 +36,16 @@ class Match:
     def next(self):
         return self.board.next
 
-    @property
-    def legal_actions(self):
-        return self.ui.legal_actions
+    def start(self):
+        if self.ui:
+            self.start_with_ui()
+        else:
+            self.start_without_ui()
 
     def start_with_ui(self):
-        """Start the game with UI."""
+        """Start the game with GUI."""
         self.ui.initialize()
+        self.time_elapsed = time.time()
 
         # First move is fixed on the center of board
         first_move = (10, 10)
@@ -89,6 +92,31 @@ class Match:
             self.ui.save_image(path_file)
             print('Board image saved in file ' + path_file)
 
+    def start_without_ui(self):
+        """Start the game without GUI. Only possible when no human is playing."""
+        # First move is fixed on the center of board
+        self.time_elapsed = time.time()
+        first_move = (10, 10)
+        self.board.put_stone(first_move, check_legal=False)
+
+        # Take turns to play move
+        while self.board.winner is None:
+            if self.board.next == 'BLACK':
+                point = self.perform_one_move(self.agent_black)
+            else:
+                point = self.perform_one_move(self.agent_white)
+
+            if point is None:
+                self.board.winner = opponent_color(self.board.next)
+                print('Game ends early (no legal action is available for %s)' % self.board.next)
+                break
+
+            # Apply action
+            self.board.put_stone(point, check_legal=False)  # Assuming agent always gives legal actions
+            self.counter_move += 1
+
+        self.time_elapsed = time.time() - self.time_elapsed
+
     def perform_one_move(self, agent):
         if agent:
             return self._move_by_agent(agent)
@@ -122,8 +150,7 @@ if __name__ == '__main__':
     # match = Match()
     # match = Match(agent_black=RandomAgent('BLACK'))
     # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
-    match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True,
-                  dir_save='/Users/liyanxu/Desktop')
-    match.start_with_ui()
+    match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
+    match.start()
     print(match.winner + ' wins!')
     print('Match ends in ' + str(match.time_elapsed) + ' s')
