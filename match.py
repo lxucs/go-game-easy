@@ -150,8 +150,8 @@ class Match:
 if __name__ == '__main__':
     # match = Match()
     # match = Match(agent_black=RandomAgent('BLACK'))
-    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
-    match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
+    match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
+    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
     match.start()
     print(match.winner + ' wins!')
     print('Match ends in ' + str(match.time_elapsed) + ' seconds')

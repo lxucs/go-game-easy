@@ -2,6 +2,7 @@ import random
 
 
 class Agent:
+    """Agent is stateless."""
     def __init__(self, color):
         self.color = color
 
