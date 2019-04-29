@@ -6,8 +6,6 @@ GUI is provided for human to play; legal actions at each turn are indicated on t
 
 Various AI agents are also provided.
 
-Game rules and usage will be edited later.
-
 ### Game Rules
 
 This "simplified" version of Go has the same rules and concepts (such as "liberties") as the original Go, with the exceptions on legal actions and winning criteria.
@@ -22,11 +20,52 @@ This "simplified" version of Go has the same rules and concepts (such as "libert
     * You remove any opponent's group.
     * There are no legal actions for the opponent (this happens around 1.6% for random plays).
 
+BLACK always has the first move; the first move is always on the center of the board.
+
 ### Usage
 
 #### Start A Match
 
+See usage on `match.py`.
 
+#### Examples:
+
+human vs. human: `./match.py`
+
+random agent (BLACK) vs. human (WHITE): `./match.py -b random`
+
+human (BLACK) vs. greedy agent (WHITE): `./match.py -w greedy`
+
+expectimax agent with search depth 2 (BLACK) vs. human (WHITE): `./match.py -b expectimax -d 2`
+
+greedy agent (BLACK) vs. random agent (WHITE): `./match.py -b greedy -w random`
+
+
+```angular2html
+usage: Mini Go Game [-h] [-b AGENT_BLACK] [-w AGENT_WHITE] [-d SEARCH_DEPTH]
+                    [-g GUI] [-s DIR_SAVE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b AGENT_BLACK, --agent_black AGENT_BLACK
+                        possible agents for BLACK: random; greedy; minimax;
+                        expectimax; DEFAULT is None (human)
+  -w AGENT_WHITE, --agent_white AGENT_WHITE
+                        possible agents for WHITE: random; greedy; minimax;
+                        expectimax; DEFAULT is None (human)
+  -d SEARCH_DEPTH, --search_depth SEARCH_DEPTH
+                        the search depth for searching agents if applicable;
+                        DEFAULT is 2
+  -g GUI, --gui GUI     if show GUI; always true if human plays; DEFAULT is
+                        True
+  -s DIR_SAVE, --dir_save DIR_SAVE
+                        if not None, save the image of last board state to
+                        this directory; DEFAULT is None
+```
+
+#### Benchmark on AI Agents
+
+See `benchmark.py`.
 
 ### Code
 
