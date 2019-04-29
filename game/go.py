@@ -167,7 +167,11 @@ class Board(object):
         return newgroup
 
     def get_legal_actions(self):
-        """Return a list of legal actions."""
+        """External interface to get legal actions"""
+        return self.legal_actions.copy()
+
+    def _get_legal_actions(self):
+        """Internal method to calculate legal actions"""
         if self.winner:
             return []
 
@@ -274,7 +278,7 @@ class Board(object):
         self.next = opponent_color(self.next)
 
         # Update legal_actions; if there are no legal actions for opponent, claim winning
-        self.legal_actions = self.get_legal_actions()
+        self.legal_actions = self._get_legal_actions()
         if not self.legal_actions:
             self.winner = opponent_color(self.next)
             self.end_by_no_legal_actions = True

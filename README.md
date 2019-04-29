@@ -24,6 +24,7 @@ See usage on `match.py`.
 
 **greedy agent** (BLACK) vs. **random agent** (WHITE): `./match.py -b greedy -w random`
 
+Usage of **RL agents** will be edited later.
 
 ```angular2html
 usage: Mini Go Game [-h] [-b AGENT_BLACK] [-w AGENT_WHITE] [-d SEARCH_DEPTH]
