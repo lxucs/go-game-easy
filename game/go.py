@@ -281,9 +281,9 @@ class Board(object):
 
         return True
     
-    def generate_successor_state(self, action):
+    def generate_successor_state(self, action, check_legal=False):
         board = self.copy()
-        board.put_stone(action)
+        board.put_stone(action, check_legal=check_legal)
         return board
         
     def __str__(self):

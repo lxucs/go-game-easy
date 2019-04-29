@@ -1,4 +1,4 @@
-## "Mini" Go Game with AI Agents
+## "Mini" Go Game with Classic AI Agents
 
 An "easier" version of Go game implemented in Python, with more constraints on legal moves, and simpler winning condition.
 
