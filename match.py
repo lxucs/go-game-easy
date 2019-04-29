@@ -1,9 +1,13 @@
+#!/usr/bin/env python
 from game.go import Board, opponent_color
 from game.ui import UI
 import pygame
 import time
-from agent.basic_agent import RandomAgent
+from agent.basic_agent import RandomAgent, GreedyAgent
+from agent.search_agent import AlphaBetaAgent, ExpectimaxAgent
+from agent.evaluation import evaluate
 from os.path import join
+from argparse import ArgumentParser
 
 
 class Match:
@@ -142,12 +146,69 @@ class Match:
                             return point
 
 
-if __name__ == '__main__':
-    # match = Match()
-    # match = Match(agent_black=RandomAgent('BLACK'))
-    match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
-    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
+def get_args():
+    parser = ArgumentParser('Mini Go Game')
+    parser.add_argument('-b', '--agent_black', default=None,
+                        help='possible agents for BLACK: random; greedy; minimax; expectimax; DEFAULT is None (human)')
+    parser.add_argument('-w', '--agent_white', default=None,
+                        help='possible agents for WHITE: random; greedy; minimax; expectimax; DEFAULT is None (human)')
+    parser.add_argument('-d', '--search_depth', type=int, default=2,
+                        help='the search depth for searching agents if applicable; DEFAULT is 2')
+    parser.add_argument('-g', '--gui', type=bool, default=True,
+                        help='if show GUI; always true if human plays; DEFAULT is True')
+    parser.add_argument('-s', '--dir_save', default=None,
+                        help='if not None, save the image of last board state to this directory; DEFAULT is None')
+    return parser.parse_args()
+
+
+def get_agent(str_agent, color, depth):
+    if str_agent is None:
+        return None
+    str_agent = str_agent.lower()
+    if str_agent == 'none':
+        return None
+    elif str_agent == 'random':
+        return RandomAgent(color)
+    elif str_agent == 'greedy':
+        return GreedyAgent(color)
+    elif str_agent == 'minimax':
+        return AlphaBetaAgent(color, eval_func=evaluate, depth=depth)
+    elif str_agent == 'expectimax':
+        return ExpectimaxAgent(color, eval_func=evaluate, depth=depth)
+    else:
+        raise ValueError('Invalid agent for ' + color)
+
+
+def main():
+    args = get_args()
+    depth = args.search_depth
+    agent_black = get_agent(args.agent_black, 'BLACK', depth)
+    agent_white = get_agent(args.agent_white, 'WHITE', depth)
+    gui = args.gui
+    dir_save = args.dir_save
+
+    print('Agent for BLACK: ' + (str(agent_black) if agent_black else 'Human'))
+    print('Agent for WHITE: ' + (str(agent_white) if agent_white else 'Human'))
+    if dir_save:
+        print('Directory to save board image: ' + dir_save)
+
+    match = Match(agent_black=agent_black, agent_white=agent_white, gui=gui, dir_save=dir_save)
+
+    print('Match starts!')
     match.start()
+
     print(match.winner + ' wins!')
     print('Match ends in ' + str(match.time_elapsed) + ' seconds')
     print('Match ends in ' + str(match.counter_move) + ' moves')
+
+
+if __name__ == '__main__':
+    # match = Match()
+    # match = Match(agent_black=RandomAgent('BLACK'))
+    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=True)
+    # match = Match(agent_black=RandomAgent('BLACK'), agent_white=RandomAgent('WHITE'), gui=False)
+    # match.start()
+    # print(match.winner + ' wins!')
+    # print('Match ends in ' + str(match.time_elapsed) + ' seconds')
+    # print('Match ends in ' + str(match.counter_move) + ' moves')
+    main()

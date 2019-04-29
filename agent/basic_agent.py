@@ -14,6 +14,9 @@ class Agent:
     def get_action(self, board: Board):
         raise NotImplementedError
 
+    def __str__(self):
+        return self.__class__.__name__ + '; color: ' + self.color
+
 
 class RandomAgent(Agent):
     """Pick a random action."""

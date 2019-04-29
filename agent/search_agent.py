@@ -17,6 +17,9 @@ class SearchAgent(Agent):
     def get_action(self, board):
         raise NotImplementedError
 
+    def __str__(self):
+        return '%s; color: %s; search_depth: %d' % (self.__class__.__name__, self.color, self.depth)
+
 
 class AlphaBetaAgent(SearchAgent):
     def __init__(self, color, eval_func, depth):
