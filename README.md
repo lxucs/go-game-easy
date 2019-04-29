@@ -6,21 +6,7 @@ GUI is provided for human to play; legal actions at each turn are indicated on t
 
 Various AI agents are also provided.
 
-### Game Rules
-
-This "simplified" version of Go has the same rules and concepts (such as "liberties") as the original Go, with the exceptions on legal actions and winning criteria.
-
-* Legal actions: at each turn, the player can only place the stone on one of opponent's liberties, unless the player has any self-group to save.
-    * If there exists any opponent's group that has only one liberty, the legal actions will be these liberties to cause a direct win.
-    * Else, if there exists any self-group that has only one liberty, the legal actions will be these liberties to try to save these groups. If sadly there are more than one of these liberties, the player will lose in the next round :(
-    * Else, there are no endangered groups for both players; the player should place the stone on one of opponent's liberties.
-    * Suicidal moves are not considered as legal actions.
-
-* Winning criteria (one of the following):
-    * You remove any opponent's group.
-    * There are no legal actions for the opponent (this happens around 1.6% for random plays).
-
-BLACK always has the first move; the first move is always on the center of the board.
+<img src="img/Board.jpg" alt="Board" width="450" align="middle"/>
 
 ### Usage
 
@@ -30,15 +16,13 @@ See usage on `match.py`.
 
 #### Examples:
 
-human vs. human: `./match.py`
+**human** vs. **human**: `./match.py`
 
-random agent (BLACK) vs. human (WHITE): `./match.py -b random`
+**random agent** (BLACK) vs. **human** (WHITE): `./match.py -b random`
 
-human (BLACK) vs. greedy agent (WHITE): `./match.py -w greedy`
+**expectimax agent with search depth** 2 (BLACK) vs. **human** (WHITE): `./match.py -b expectimax -d 2`
 
-expectimax agent with search depth 2 (BLACK) vs. human (WHITE): `./match.py -b expectimax -d 2`
-
-greedy agent (BLACK) vs. random agent (WHITE): `./match.py -b greedy -w random`
+**greedy agent** (BLACK) vs. **random agent** (WHITE): `./match.py -b greedy -w random`
 
 
 ```angular2html
@@ -62,6 +46,24 @@ optional arguments:
                         if not None, save the image of last board state to
                         this directory; DEFAULT is None
 ```
+
+
+### Game Rules
+
+This "simplified" version of Go has the same rules and concepts (such as "liberties") as the original Go, with the exceptions on legal actions and winning criteria.
+
+* **Legal actions**: at each turn, the player can only place the stone on one of opponent's liberties, unless the player has any self-group to save.
+    * If there exists any opponent's group that has only one liberty, the legal actions will be these liberties to cause a direct win.
+    * Else, if there exists any self-group that has only one liberty, the legal actions will be these liberties to try to save these groups. If sadly there are more than one of these liberties, the player will lose in the next round :(
+    * Else, there are no endangered groups for both players; the player should place the stone on one of opponent's liberties.
+    * Suicidal moves are not considered as legal actions.
+
+* **Winning criteria** (one of the following):
+    * You remove any opponent's group.
+    * There are no legal actions for the opponent (this happens around 1.6% for random plays).
+
+BLACK always has the first move; the first move is always on the center of the board.
+
 
 #### Benchmark on AI Agents
 
