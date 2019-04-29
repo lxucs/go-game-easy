@@ -47,6 +47,9 @@ optional arguments:
                         this directory; DEFAULT is None
 ```
 
+#### Benchmark on AI Agents
+
+See `benchmark.py`.
 
 ### Game Rules
 
@@ -63,11 +66,6 @@ This "simplified" version of Go has the same rules and concepts (such as "libert
     * There are no legal actions for the opponent (this happens around 1.6% for random plays).
 
 BLACK always has the first move; the first move is always on the center of the board.
-
-
-#### Benchmark on AI Agents
-
-See `benchmark.py`.
 
 ### Code
 
