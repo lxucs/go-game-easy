@@ -1,4 +1,8 @@
-from game.go import Board, opponent_color
+from game.go import Board
+from agent.util import get_num_endangered_groups, get_liberties
+"""
+Evaluation functions for search_agent.
+"""
 
 
 def evaluate(board: Board, color):
@@ -12,22 +16,11 @@ def evaluate(board: Board, color):
     score_num_moves = -board.counter_move
 
     # Score for endangered groups
-    num_endangered_self = 0
-    num_endangered_oppo = 0
-    for group in board.endangered_groups:
-        if group.color == color:
-            num_endangered_self += 1
-        else:
-            num_endangered_oppo += 1
+    num_endangered_self, num_endangered_oppo = get_num_endangered_groups(board, color)
     score_endangered_group = 200 * (num_endangered_oppo - num_endangered_self)
 
     # Score for liberties
-    liberties_self = set()
-    liberties_oppo = set()
-    for group in board.groups[color]:
-        liberties_self = liberties_self | group.liberties
-    for group in board.groups[opponent_color(color)]:
-        liberties_oppo = liberties_oppo | group.liberties
+    liberties_self, liberties_oppo = get_liberties(board, color)
     score_liberties = 30 * (len(liberties_self) - len(liberties_oppo))
 
     score_final = score_num_moves + score_endangered_group + score_liberties

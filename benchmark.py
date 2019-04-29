@@ -30,7 +30,7 @@ class Benchmark:
         list_time_elapsed = []
 
         for i in range(num_tests):
-            # print('Running game ' + str(i))
+            print('Running game ' + str(i))
             match = self.create_match()
             match.start()
 

@@ -1,5 +1,3 @@
-import random
-from game.go import Board, opponent_color
 from agent.basic_agent import Agent
 
 
