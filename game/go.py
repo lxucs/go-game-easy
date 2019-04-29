@@ -168,10 +168,11 @@ class Board(object):
 
     def get_legal_actions(self):
         """External interface to get legal actions"""
+        # It is important NOT to calculate actions on the fly to keep the performance.
         return self.legal_actions.copy()
 
     def _get_legal_actions(self):
-        """Internal method to calculate legal actions"""
+        """Internal method to calculate legal actions; shouldn't be called outside"""
         if self.winner:
             return []
 
@@ -251,6 +252,10 @@ class Board(object):
             if point not in self.legal_actions:
                 print('Error: illegal move, try again.')
                 return False
+        # If more than 400 moves (which shouldn't happen), print the board for debug
+        if self.counter_move > 400:
+            print(self)
+            raise RuntimeError('More than 400 moves in one game! Board is printed.')
 
         # Get all self-groups containing this liberty
         self_belonging_groups = self.libertydict.get_groups(self.next, point).copy()

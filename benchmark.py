@@ -53,5 +53,5 @@ if __name__ == '__main__':
     # agent_oppo = GreedyAgent('WHITE')
 
     benchmark = Benchmark(agent_self=agent_self, agent_oppo=agent_oppo)
-    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(5000)
+    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(100)
     print('Win rate: %f; Avg # moves: %f; Avg time: %f' % (win_mean, num_moves_mean, time_elapsed_mean))

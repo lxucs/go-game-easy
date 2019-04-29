@@ -1,4 +1,5 @@
 from agent.basic_agent import Agent
+import random
 
 
 class SearchAgent(Agent):
@@ -11,6 +12,7 @@ class SearchAgent(Agent):
         super().__init__(color)
         self.eval_func = eval_func
         self.depth = depth
+        self.pruning_actions = None
 
     def get_action(self, board):
         raise NotImplementedError
@@ -23,7 +25,8 @@ class AlphaBetaAgent(SearchAgent):
     def __init__(self, color, eval_func, depth):
         super().__init__(color, eval_func, depth)
 
-    def get_action(self, board):
+    def get_action(self, board, pruning_actions=20):
+        self.pruning_actions = pruning_actions
         score, actions = self.max_value(board, 0, float("-inf"), float("inf"))
         return actions[0] if len(actions) > 0 else None
 
@@ -34,7 +37,12 @@ class AlphaBetaAgent(SearchAgent):
 
         max_score = float("-inf")
         max_score_actions = None
-        for action in board.get_legal_actions():
+        # Prune the legal actions
+        legal_actions = board.get_legal_actions()
+        if self.pruning_actions and len(legal_actions) > self.pruning_actions:
+            legal_actions = random.sample(legal_actions, self.pruning_actions)
+
+        for action in legal_actions:
             score, actions = self.min_value(board.generate_successor_state(action), depth, alpha, beta)
             if score > max_score:
                 max_score = score
@@ -55,7 +63,12 @@ class AlphaBetaAgent(SearchAgent):
 
         min_score = float("inf")
         min_score_actions = None
-        for action in board.get_legal_actions():
+        # Prune the legal actions
+        legal_actions = board.get_legal_actions()
+        if self.pruning_actions and len(legal_actions) > self.pruning_actions:
+            legal_actions = random.sample(legal_actions, self.pruning_actions)
+
+        for action in legal_actions:
             score, actions = self.max_value(board.generate_successor_state(action), depth+1, alpha, beta)
             if score < min_score:
                 min_score = score
@@ -74,7 +87,8 @@ class ExpectimaxAgent(SearchAgent):
     def __init__(self, color, eval_func, depth):
         super().__init__(color, eval_func, depth)
 
-    def get_action(self, board):
+    def get_action(self, board, pruning_actions=16):
+        self.pruning_actions = pruning_actions
         score, actions = self.max_value(board, 0)
         return actions[0] if len(actions) > 0 else None
 
@@ -84,7 +98,12 @@ class ExpectimaxAgent(SearchAgent):
 
         max_score = float("-inf")
         max_score_actions = None
-        for action in board.get_legal_actions():
+        # Prune the legal actions
+        legal_actions = board.get_legal_actions()
+        if self.pruning_actions and len(legal_actions) > self.pruning_actions:
+            legal_actions = random.sample(legal_actions, self.pruning_actions)
+
+        for action in legal_actions:
             score, actions = self.expected_value(board.generate_successor_state(action), depth)
             if score > max_score:
                 max_score = score
@@ -97,7 +116,11 @@ class ExpectimaxAgent(SearchAgent):
             return self.eval_func(board, self.color), []
 
         expected_score = 0.0
+        # Prune the legal actions
         legal_actions = board.get_legal_actions()
+        if self.pruning_actions and len(legal_actions) > self.pruning_actions:
+            legal_actions = random.sample(legal_actions, self.pruning_actions)
+
         for action in legal_actions:
             score, actions = self.max_value(board.generate_successor_state(action), depth+1)
             expected_score += score / len(legal_actions)
