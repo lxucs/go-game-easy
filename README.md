@@ -1,14 +1,21 @@
 ## "Mini" Go Game with Classic AI Agents
 
-An "easier" version of Go game implemented in Python, with more constraints on legal moves, and simpler winning condition.
+An "easier" version of Go game implemented in Python 3, with more constraints on legal moves, and simpler winning condition.
 
-GUI is provided for human to play; legal actions at each turn are indicated on the board.
+GUI is provided for human to play; legal actions at each turn are indicated on the board as blue dots.
 
-Various AI agents are also provided.
+The following AI agents are also provided:
+* Random agent
+* Greedy agent
+* Minimax search agent with alpha-beta pruning
+* Expectimax search agent
+* Approximate Q-learning agent
 
 <img src="img/Board.jpg" alt="Board" width="450" align="middle"/>
 
 ### Usage
+
+Install dependencies: `pip install -r requirements.txt`
 
 #### Start A Match
 
@@ -20,11 +27,14 @@ See usage on `match.py`.
 
 **random agent** (BLACK) vs. **human** (WHITE): `./match.py -b random`
 
+**minimax agent with search depth** 1 (BLACK) vs. **human** (WHITE): `./match.py -b minimax`
+
 **expectimax agent with search depth** 2 (BLACK) vs. **human** (WHITE): `./match.py -b expectimax -d 2`
 
-**greedy agent** (BLACK) vs. **random agent** (WHITE): `./match.py -b greedy -w random`
+**Q-learning agent** (BLACK) vs. **human** (WHITE): `./match.py -b approx-q`
 
-Usage of **RL agents** will be edited later.
+**Q-learning agent** (BLACK) vs. **random agent** (WHITE): `./match.py -b approx-q -w random`
+
 
 ```angular2html
 usage: Mini Go Game [-h] [-b AGENT_BLACK] [-w AGENT_WHITE] [-d SEARCH_DEPTH]
@@ -33,14 +43,14 @@ usage: Mini Go Game [-h] [-b AGENT_BLACK] [-w AGENT_WHITE] [-d SEARCH_DEPTH]
 optional arguments:
   -h, --help            show this help message and exit
   -b AGENT_BLACK, --agent_black AGENT_BLACK
-                        possible agents for BLACK: random; greedy; minimax;
-                        expectimax; DEFAULT is None (human)
+                        possible agents: random; greedy; minimax; expectimax,
+                        approx-q; DEFAULT is None (human)
   -w AGENT_WHITE, --agent_white AGENT_WHITE
-                        possible agents for WHITE: random; greedy; minimax;
-                        expectimax; DEFAULT is None (human)
+                        possible agents: random; greedy; minimax; expectimax,
+                        approx-q; DEFAULT is None (human)
   -d SEARCH_DEPTH, --search_depth SEARCH_DEPTH
                         the search depth for searching agents if applicable;
-                        DEFAULT is 2
+                        DEFAULT is 1
   -g GUI, --gui GUI     if show GUI; always true if human plays; DEFAULT is
                         True
   -s DIR_SAVE, --dir_save DIR_SAVE
