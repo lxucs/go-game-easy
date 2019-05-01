@@ -32,13 +32,14 @@ class Benchmark:
         list_time_elapsed = []
 
         for i in range(num_tests):
-            print('Running game ' + str(i))
+            print('Running game %d: ' % i, end='')
             match = self.create_match()
             match.start()
 
             list_win.append(match.winner == self.agent_self.color)
             list_num_moves.append(match.counter_move)
             list_time_elapsed.append(match.time_elapsed)
+            print('\tWinner: ' + match.winner)
 
         win_mean = mean(list_win)
         num_moves_mean = mean(list_num_moves)
@@ -57,5 +58,5 @@ if __name__ == '__main__':
     # agent_oppo = GreedyAgent('WHITE')
 
     benchmark = Benchmark(agent_self=agent_self, agent_oppo=agent_oppo)
-    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(30)
+    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(2000)
     print('Win rate: %f; Avg # moves: %f; Avg time: %f' % (win_mean, num_moves_mean, time_elapsed_mean))

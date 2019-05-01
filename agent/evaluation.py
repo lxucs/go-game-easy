@@ -1,34 +1,64 @@
 from game.go import Board, opponent_color
-from agent.util import get_num_endangered_groups, get_liberties
+from agent.util import get_num_endangered_groups, eval_group, get_liberties, is_dangerous_liberty
 """
 Evaluation functions for search_agent.
 """
 
 
 def evaluate(board: Board, color):
-    if color == board.next:
-        return -evaluate(board, opponent_color(color))
-
+    """Color has the next action"""
     # Score for win or lose
-    priority = False  # Normally false because the next move is opponent's, unless opponent is forced to save one of his group.
-    winscore = 361. - board.counter_move  # The faster the game is, the more the reward and punishment is.
+    score_win = 1000 - board.counter_move  # Prefer faster game
     if board.winner:
-        score_win_lose = winscore if board.winner == color else -winscore
-        return score_win_lose
+        return score_win if board.winner == color else -score_win
 
+    oppo = opponent_color(color)
     # Score for endangered groups
     num_endangered_self, num_endangered_oppo = get_num_endangered_groups(board, color)
-    if num_endangered_self > 0:
-        return -winscore + 1  # Lose in next move
-    elif num_endangered_oppo > 1:
-        return (winscore - 1) / 1.2  # Large possibility towin
-    elif num_endangered_oppo == 1:
-        priority = True
+    if num_endangered_oppo > 0:
+        return score_win - 10  # Win in the next move
+    elif num_endangered_self > 1:
+        return -(score_win - 10)  # Lose in the next move
+
+    # Score for good/bad moves
+    liberties_self, liberties_oppo = get_liberties(board, color)
+    for liberty in liberties_oppo:
+        if is_dangerous_liberty(board, liberty, oppo):
+            return score_win / 2  # Exist a way to guarantee winning in the next next move
+    for liberty in liberties_self:
+        if is_dangerous_liberty(board, liberty, color):
+            self_groups = board.libertydict.get_groups(color, liberty)
+            liberties = self_groups[0].liberties | self_groups[1].liberties
+            able_to_save = False
+            for lbt in liberties:
+                if len(board.libertydict.get_groups(oppo, lbt)) > 0:
+                    able_to_save = True
+                    break
+            if not able_to_save:
+                return -score_win / 2  # Exist a way to guarantee losing in the next next move
 
     # Score for liberties
-    selfscore, opponentscore = get_liberties(board, color)
-    if priority:
-        finals = opponentscore[0] - selfscore[0] * 0.85 + opponentscore[1] * 0.7 - selfscore[1] * 0.6
-    else:
-        finals = opponentscore[0] * 0.85 - selfscore[0] + opponentscore[1] * 0.6 - selfscore[1] * 0.7
-    return finals * winscore
+    num_shared_liberties_self = 0
+    num_shared_liberties_oppo = 0
+    for liberty in liberties_self:
+        num_shared_liberties_self += len(board.libertydict.get_groups(color, liberty)) - 1
+    for liberty in liberties_oppo:
+        num_shared_liberties_oppo += len(board.libertydict.get_groups(oppo, liberty)) - 1
+    score_liberties = num_shared_liberties_oppo - num_shared_liberties_self
+
+    # Score for groups (doesn't help)
+    # score_groups_self = []
+    # score_groups_oppo = []
+    # for group in board.groups[color]:
+        # if group.num_liberty > 1:
+            # score_groups_self.append(eval_group(group, board))
+    # for group in board.groups[opponent_color(color)]:
+        # if group.num_liberty > 1:
+            # score_groups_oppo.append(eval_group(group, board))
+    # score_groups_self.sort(reverse=True)
+    # score_groups_self += [0, 0]
+    # score_groups_oppo.sort(reverse=True)
+    # score_groups_oppo += [0, 0]
+    # finals = score_groups_oppo[0] - score_groups_self[0] + score_groups_oppo[1] - score_groups_self[1]
+
+    return score_liberties
