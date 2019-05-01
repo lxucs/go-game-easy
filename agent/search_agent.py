@@ -84,6 +84,7 @@ class AlphaBetaAgent(SearchAgent):
 
 
 class ExpectimaxAgent(SearchAgent):
+    """Assume uniform distribution for opponent"""
     def __init__(self, color, eval_func, depth):
         super().__init__(color, eval_func, depth)
 

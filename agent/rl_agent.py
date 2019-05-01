@@ -31,26 +31,33 @@ class ApproxQAgent(RlAgent):
 
         return max(legal_actions, key=lambda action: self._calc_q(board, action))
 
-    def save(self):
+    def get_default_path(self):
+        return '%s_%s.npy' % (self.__class__.__name__, self.color)
+
+    def save(self, path_file=None):
         """Save the weight vector."""
         if self.w is not None:
-            path_file = str(self) + '.npy'
+            if not path_file:
+                path_file = self.get_default_path()
             np.save(path_file, self.w)
             print('Saved weights to ' + path_file)
 
-    def load(self):
+    def load(self, path_file=None):
         """Load the weight vector."""
-        path_file = str(self) + '.npy'
+        if path_file is None:
+            path_file = self.get_default_path()
         self.w = np.load(path_file)
         print('Loaded weights from ' + path_file)
 
-    def train(self, epochs, lr, discount, exploration_rate):
+    def train(self, epochs, lr, discount, exploration_rate, decay_rate=0.9, decay_epoch=50):
         """
         Use RandomAgent for opponent.
         :param epochs: one epoch = one game
         :param lr: learning rate
         :param discount:
         :param exploration_rate: the probability to cause random move during training
+        :param decay_rate: the rate to decay learning rate and exploration rate
+        :param decay_epoch: the number of epochs to apply decay
         :return:
         """
         if exploration_rate > 1 or exploration_rate < 0:
@@ -59,17 +66,19 @@ class ApproxQAgent(RlAgent):
         num_feats = self.rl_env.get_num_feats()
         self.w = np.random.random(num_feats)
 
-        exploration_rate_decay = 0.9
         print('Start training ' + str(self))
         for epoch in range(epochs):
             diff_mean = self._train_one_epoch(lr, discount, exploration_rate)
-            # Decay exploration_rate
-            if epoch % 100 == 99:
-                exploration_rate *= exploration_rate_decay
-                print('Decay exploration_rate to %f' % exploration_rate)
+            # Decay learning rate and exploration rate
+            if epoch % decay_epoch == decay_epoch - 1:
+                lr *= decay_rate
+                exploration_rate *= decay_rate
+                print('Decay learning rate to %f' % lr)
+                print('Decay exploration rate to %f' % exploration_rate)
             # Echo performance
             if epoch % 5 == 4:
                 print('Epoch %d: mean difference %f' % (epoch, diff_mean))
+        print('Finished training')
 
     def _train_one_epoch(self, lr, discount, exploration_rate):
         """Return the mean of difference during this epoch"""
@@ -124,5 +133,5 @@ class ApproxQAgent(RlAgent):
 if __name__ == '__main__':
     # Train and save ApproxQAgent
     approx_q_agent = ApproxQAgent('BLACK', RlEnv())
-    approx_q_agent.train(5000, 0.1, 0.8, 0.05)
+    approx_q_agent.train(500, 0.001, 0.8, 0.05)
     approx_q_agent.save()

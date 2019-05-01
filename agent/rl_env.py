@@ -15,20 +15,21 @@ class RlEnv:
         """Return a scalar reward"""
         if board.winner is None:
             return 0
-        return 1000 if board.winner == color else -1000
+        return 10 if board.winner == color else -10
 
     @classmethod
     def extract_features(cls, board: Board, action, color):
         """Return a numpy array of features"""
         board_next = board.generate_successor_state(action)
+        oppo = opponent_color(color)
 
         # Features for win or lose
         feat_win = 1 if board_next.winner == color else 0
-        feat_lose = 1 if board_next.winner == opponent_color(color) else 0
+        feat_lose = 1 if board_next.winner == oppo else 0
 
         # Feature for groups
         num_groups_self = len(board_next.groups[color])
-        num_groups_oppo = len(board_next.groups[opponent_color(color)])
+        num_groups_oppo = len(board_next.groups[oppo])
         feat_diff_groups = num_groups_self - num_groups_oppo
 
         # Features for endangered groups
@@ -42,8 +43,19 @@ class RlEnv:
         feat_diff_liberties = len(liberties_self) - len(liberties_oppo)
         feat_liberties_intersection = len(liberties_self & liberties_oppo)
 
+        # Features for shared liberties
+        feat_shared_liberties_self = 0
+        feat_shared_liberties_oppo = 0
+        for liberty in liberties_self:
+            if len(board.libertydict.get_groups(color, liberty)) > 1:
+                feat_shared_liberties_self += 1
+        for liberty in liberties_oppo:
+            if len(board.libertydict.get_groups(oppo, liberty)) > 1:
+                feat_shared_liberties_oppo += 1
+
         feats = [feat_win, feat_lose, feat_diff_groups, feat_num_endangered_self, feat_num_endangered_oppo,
-                 feat_diff_endangered, feat_diff_liberties, feat_liberties_intersection, 1]  # Add bias
+                 feat_diff_endangered, feat_diff_liberties, feat_liberties_intersection, feat_shared_liberties_self,
+                 feat_shared_liberties_oppo, 1]  # Add bias
         return np.array(feats)
 
     @classmethod

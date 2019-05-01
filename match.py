@@ -5,6 +5,8 @@ import pygame
 import time
 from agent.basic_agent import RandomAgent, GreedyAgent
 from agent.search_agent import AlphaBetaAgent, ExpectimaxAgent
+from agent.rl_agent import ApproxQAgent
+from agent.rl_env import RlEnv
 from agent.evaluation import evaluate
 from os.path import join
 from argparse import ArgumentParser
@@ -175,6 +177,10 @@ def get_agent(str_agent, color, depth):
         return AlphaBetaAgent(color, eval_func=evaluate, depth=depth)
     elif str_agent == 'expectimax':
         return ExpectimaxAgent(color, eval_func=evaluate, depth=depth)
+    elif str_agent == 'approx-q':
+        agent = ApproxQAgent(color, RlEnv())
+        agent.load()
+        return agent
     else:
         raise ValueError('Invalid agent for ' + color)
 
