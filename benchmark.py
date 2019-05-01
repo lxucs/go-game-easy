@@ -49,10 +49,10 @@ class Benchmark:
 
 if __name__ == '__main__':
     # agent_self = GreedyAgent('BLACK')
-    agent_self = AlphaBetaAgent('BLACK', 1)
+    # agent_self = AlphaBetaAgent('BLACK', 1)
     # agent_self = ExpectimaxAgent('BLACK', 2)
-    # agent_self = ApproxQAgent('BLACK', RlEnv())
-    # agent_self.load('agent/ApproxQAgent_BLACK.npy')
+    agent_self = ApproxQAgent('BLACK', RlEnv())
+    agent_self.load('agent/ApproxQAgent_BLACK.npy')
 
     agent_oppo = RandomAgent('WHITE')
     # agent_oppo = GreedyAgent('WHITE')

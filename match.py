@@ -150,9 +150,9 @@ class Match:
 def get_args():
     parser = ArgumentParser('Mini Go Game')
     parser.add_argument('-b', '--agent_black', default=None,
-                        help='possible agents for BLACK: random; greedy; minimax; expectimax; DEFAULT is None (human)')
+                        help='possible agents: random; greedy; minimax; expectimax, approx-q; DEFAULT is None (human)')
     parser.add_argument('-w', '--agent_white', default=None,
-                        help='possible agents for WHITE: random; greedy; minimax; expectimax; DEFAULT is None (human)')
+                        help='possible agents: random; greedy; minimax; expectimax, approx-q; DEFAULT is None (human)')
     parser.add_argument('-d', '--search_depth', type=int, default=1,
                         help='the search depth for searching agents if applicable; DEFAULT is 1')
     parser.add_argument('-g', '--gui', type=bool, default=True,
@@ -178,7 +178,7 @@ def get_agent(str_agent, color, depth):
         return ExpectimaxAgent(color, depth=depth)
     elif str_agent == 'approx-q':
         agent = ApproxQAgent(color, RlEnv())
-        agent.load()
+        agent.load('agent/ApproxQAgent_' + color + '.npy')
         return agent
     else:
         raise ValueError('Invalid agent for ' + color)

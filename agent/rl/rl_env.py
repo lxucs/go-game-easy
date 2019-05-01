@@ -25,6 +25,8 @@ class RlEnv:
 
         # Features for win
         feat_win = 1 if board.winner == color else 0
+        if feat_win == 1:
+            return np.array([feat_win] + [0] * (cls.get_num_feats() - 1))
 
         # Features for endangered groups
         num_endangered_self, num_endangered_oppo = get_num_endangered_groups(board, color)
@@ -92,5 +94,4 @@ class RlEnv:
 
     @classmethod
     def get_num_feats(cls):
-        board = Board()
-        return cls.extract_features(board, (10, 10), 'BLACK').shape[0]
+        return 13
