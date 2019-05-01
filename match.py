@@ -4,10 +4,9 @@ from game.ui import UI
 import pygame
 import time
 from agent.basic_agent import RandomAgent, GreedyAgent
-from agent.search_agent import AlphaBetaAgent, ExpectimaxAgent
-from agent.rl_agent import ApproxQAgent
-from agent.rl_env import RlEnv
-from agent.evaluation import evaluate
+from agent.search.search_agent import AlphaBetaAgent, ExpectimaxAgent
+from agent.rl.rl_agent import ApproxQAgent
+from agent.rl.rl_env import RlEnv
 from os.path import join
 from argparse import ArgumentParser
 
@@ -154,8 +153,8 @@ def get_args():
                         help='possible agents for BLACK: random; greedy; minimax; expectimax; DEFAULT is None (human)')
     parser.add_argument('-w', '--agent_white', default=None,
                         help='possible agents for WHITE: random; greedy; minimax; expectimax; DEFAULT is None (human)')
-    parser.add_argument('-d', '--search_depth', type=int, default=2,
-                        help='the search depth for searching agents if applicable; DEFAULT is 2')
+    parser.add_argument('-d', '--search_depth', type=int, default=1,
+                        help='the search depth for searching agents if applicable; DEFAULT is 1')
     parser.add_argument('-g', '--gui', type=bool, default=True,
                         help='if show GUI; always true if human plays; DEFAULT is True')
     parser.add_argument('-s', '--dir_save', default=None,
@@ -174,9 +173,9 @@ def get_agent(str_agent, color, depth):
     elif str_agent == 'greedy':
         return GreedyAgent(color)
     elif str_agent == 'minimax':
-        return AlphaBetaAgent(color, eval_func=evaluate, depth=depth)
+        return AlphaBetaAgent(color, depth=depth)
     elif str_agent == 'expectimax':
-        return ExpectimaxAgent(color, eval_func=evaluate, depth=depth)
+        return ExpectimaxAgent(color, depth=depth)
     elif str_agent == 'approx-q':
         agent = ApproxQAgent(color, RlEnv())
         agent.load()

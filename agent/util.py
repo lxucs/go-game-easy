@@ -13,6 +13,18 @@ def get_num_endangered_groups(board: Board, color):
     return num_endangered_self, num_endangered_oppo
 
 
+def get_num_groups_with_k_liberties(board: Board, color, k):
+    num_groups_self = 0
+    num_groups_oppo = 0
+    for group in board.groups[color]:
+        if group.num_liberty == k:
+            num_groups_self += 1
+    for group in board.groups[opponent_color(color)]:
+        if group.num_liberty == k:
+            num_groups_oppo += 1
+    return num_groups_self, num_groups_oppo
+
+
 def get_liberties(board: Board, color):
     liberties_self = set()
     liberties_oppo = set()
@@ -26,6 +38,12 @@ def get_liberties(board: Board, color):
 def is_dangerous_liberty(board: Board, point, color):
     self_groups = board.libertydict.get_groups(color, point)
     return len(self_groups) == 2 and self_groups[0].num_liberty == 2 and self_groups[1].num_liberty == 2
+
+
+def calc_group_liberty_var(group: Group):
+    var_x = np.var([x[0] for x in group.liberties])
+    var_y = np.var([x[1] for x in group.liberties])
+    return var_x, var_y
 
 
 def eval_group(group: Group, board: Board):

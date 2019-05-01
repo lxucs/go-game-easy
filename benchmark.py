@@ -1,9 +1,9 @@
 from match import Match
 from agent.basic_agent import RandomAgent, GreedyAgent
-from agent.search_agent import AlphaBetaAgent, ExpectimaxAgent
-from agent.rl_agent import ApproxQAgent
-from agent.rl_env import RlEnv
-from agent.evaluation import evaluate
+from agent.search.search_agent import AlphaBetaAgent, ExpectimaxAgent
+from agent.rl.rl_agent import ApproxQAgent
+from agent.rl.rl_env import RlEnv
+from agent.search.evaluation import evaluate
 from statistics import mean
 
 
@@ -49,8 +49,8 @@ class Benchmark:
 
 if __name__ == '__main__':
     # agent_self = GreedyAgent('BLACK')
-    agent_self = AlphaBetaAgent('BLACK', evaluate, 1)
-    # agent_self = ExpectimaxAgent('BLACK', evaluate, 2)
+    agent_self = AlphaBetaAgent('BLACK', 1)
+    # agent_self = ExpectimaxAgent('BLACK', 2)
     # agent_self = ApproxQAgent('BLACK', RlEnv())
     # agent_self.load('agent/ApproxQAgent_BLACK.npy')
 
@@ -58,5 +58,5 @@ if __name__ == '__main__':
     # agent_oppo = GreedyAgent('WHITE')
 
     benchmark = Benchmark(agent_self=agent_self, agent_oppo=agent_oppo)
-    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(2000)
+    win_mean, num_moves_mean, time_elapsed_mean = benchmark.run_benchmark(500)
     print('Win rate: %f; Avg # moves: %f; Avg time: %f' % (win_mean, num_moves_mean, time_elapsed_mean))

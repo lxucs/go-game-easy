@@ -1,17 +1,18 @@
 from agent.basic_agent import Agent
 import random
+from agent.search.evaluation import evaluate
 
 
 class SearchAgent(Agent):
-    def __init__(self, color, eval_func, depth):
+    def __init__(self, color, depth, eval_func):
         """
         :param color:
-        :param eval_func: evaluation function from the evaluation module
         :param depth: search depth
+        :param eval_func: evaluation function from the evaluation module
         """
         super().__init__(color)
-        self.eval_func = eval_func
         self.depth = depth
+        self.eval_func = eval_func
         self.pruning_actions = None
 
     def get_action(self, board):
@@ -22,8 +23,8 @@ class SearchAgent(Agent):
 
 
 class AlphaBetaAgent(SearchAgent):
-    def __init__(self, color, eval_func, depth):
-        super().__init__(color, eval_func, depth)
+    def __init__(self, color, depth, eval_func=evaluate):
+        super().__init__(color, depth, eval_func)
 
     def get_action(self, board, pruning_actions=20):
         self.pruning_actions = pruning_actions
@@ -85,8 +86,8 @@ class AlphaBetaAgent(SearchAgent):
 
 class ExpectimaxAgent(SearchAgent):
     """Assume uniform distribution for opponent"""
-    def __init__(self, color, eval_func, depth):
-        super().__init__(color, eval_func, depth)
+    def __init__(self, color, depth, eval_func=evaluate):
+        super().__init__(color, depth, eval_func)
 
     def get_action(self, board, pruning_actions=16):
         self.pruning_actions = pruning_actions

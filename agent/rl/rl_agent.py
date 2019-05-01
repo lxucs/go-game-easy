@@ -1,5 +1,6 @@
 from agent.basic_agent import Agent, RandomAgent
-from agent.rl_env import RlEnv
+from agent.search.search_agent import AlphaBetaAgent
+from agent.rl.rl_env import RlEnv
 import numpy as np
 from game.go import Board
 from game.go import opponent_color
@@ -82,13 +83,17 @@ class ApproxQAgent(RlAgent):
 
     def _train_one_epoch(self, lr, discount, exploration_rate):
         """Return the mean of difference during this epoch"""
-        agent_oppo = RandomAgent(opponent_color(self.color))
+        # Opponent: minimax with random move
+        prob_oppo_random = 0.2
+        agent_oppo = AlphaBetaAgent(opponent_color(self.color), depth=1)
+        agent_oppo_random = RandomAgent(opponent_color(self.color))
+
         board = Board()
         first_move = (10, 10)
         board.put_stone(first_move, check_legal=False)
 
         if board.next != self.color:
-            board.put_stone(agent_oppo.get_action(board), check_legal=False)
+            board.put_stone(agent_oppo_random.get_action(board), check_legal=False)
 
         diffs = []
         while board.winner is None:
@@ -109,7 +114,10 @@ class ApproxQAgent(RlAgent):
 
             # Let opponent play
             if board.winner is None:
-                board.put_stone(agent_oppo.get_action(board), check_legal=False)
+                if random.uniform(0, 1) < prob_oppo_random:
+                    board.put_stone(agent_oppo_random.get_action(board), check_legal=False)
+                else:
+                    board.put_stone(agent_oppo.get_action(board), check_legal=False)
 
             # Calc difference
             reward_now = self.rl_env.get_reward(board, self.color)
@@ -133,5 +141,5 @@ class ApproxQAgent(RlAgent):
 if __name__ == '__main__':
     # Train and save ApproxQAgent
     approx_q_agent = ApproxQAgent('BLACK', RlEnv())
-    approx_q_agent.train(500, 0.001, 0.8, 0.05)
+    approx_q_agent.train(500, 0.001, 0.9, 0.1)
     approx_q_agent.save()
