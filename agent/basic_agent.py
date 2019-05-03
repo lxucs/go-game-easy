@@ -1,10 +1,14 @@
 import random
 from game.go import Board, opponent_color
+import random
 
 
 class Agent:
     """Abstract stateless agent."""
     def __init__(self, color):
+        """
+        :param color: 'BLACK' or 'WHITE'
+        """
         self.color = color
 
     @classmethod
@@ -29,11 +33,13 @@ class RandomAgent(Agent):
 
 
 class GreedyAgent(Agent):
-    """Pick the action that kills the most liberties of opponent's"""
+    """Pick the action that kills the liberty of most opponent's groups"""
     def __init__(self, color):
         super().__init__(color)
 
     def get_action(self, board):
         actions = board.get_legal_actions()
-        return max(actions, key=lambda action:
-                   len(board.libertydict.get_groups(opponent_color(self.color), action))) if actions else None
+        num_groups = [len(board.libertydict.get_groups(opponent_color(self.color), action)) for action in actions]
+        max_num_groups = max(num_groups)
+        idx_candidates = [idx for idx, num in enumerate(num_groups) if num == max_num_groups]
+        return actions[random.choice(idx_candidates)] if actions else None

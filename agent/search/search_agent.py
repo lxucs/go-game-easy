@@ -27,8 +27,10 @@ class AlphaBetaAgent(SearchAgent):
         super().__init__(color, depth, eval_func)
 
     def get_action(self, board, pruning_actions=20):
+
         self.pruning_actions = pruning_actions
         score, actions = self.max_value(board, 0, float("-inf"), float("inf"))
+
         return actions[0] if len(actions) > 0 else None
 
     def max_value(self, board, depth, alpha, beta):

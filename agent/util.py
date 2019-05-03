@@ -43,7 +43,7 @@ def is_dangerous_liberty(board: Board, point, color):
 def calc_group_liberty_var(group: Group):
     var_x = np.var([x[0] for x in group.liberties])
     var_y = np.var([x[1] for x in group.liberties])
-    return var_x, var_y
+    return var_x + var_y
 
 
 def eval_group(group: Group, board: Board):
@@ -57,6 +57,8 @@ def eval_group(group: Group, board: Board):
     var_x = np.var([x[0] for x in group.liberties])
     var_y = np.var([x[1] for x in group.liberties])
     var_sum = var_x + var_y
+    if var_sum < 0.1:
+        print('var_sum < 0.1')
 
     num_shared_liberty = 0
     for liberty in group.liberties:
@@ -73,4 +75,40 @@ def eval_group(group: Group, board: Board):
         score = 1/np.sqrt(group.num_liberty)/var_sum/8.
     else:
         score = 1/np.sqrt(group.num_liberty)/var_sum/6.
+        if np.sqrt(group.num_liberty)<1.1:
+            print('fuck!', group.num_liberty, board.winner)
+        if var_sum<0.2:
+            print('shit!')
     return score
+
+
+def get_group_scores(board: Board, color):
+    selfscore=[]
+    opponentscore=[]
+    for group in board.groups[color]:
+        if group.num_liberty != 1:
+            selfscore.append(eval_group(group, board))
+    for group in board.groups[opponent_color(color)]:
+        if group.num_liberty != 1:
+            opponentscore.append(eval_group(group, board))
+    selfscore.sort(reverse=True)
+    selfscore.extend([0, 0, 0])
+    opponentscore.sort(reverse=True)
+    opponentscore.extend([0, 0, 0])
+    return selfscore[:3], opponentscore[:3]
+
+
+def get_liberty_score(board: Board, color):
+    scores = []
+    share3 = 0
+    for liberty, groups in board.libertydict.get_items(color):
+        if len(groups) == 0:
+            continue
+        elif len(groups) == 3:
+            share3 += 1
+            continue
+        else:
+            scores.append(sum([0.353 / group.num_liberty / calc_group_liberty_var(group) for group in groups]))
+    scores.sort(reverse=True)
+    scores.extend([0, 0])
+    return scores[:2] + [-share3 / 2.]

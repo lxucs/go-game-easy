@@ -1,6 +1,6 @@
 from agent.basic_agent import Agent, RandomAgent
 from agent.search.search_agent import AlphaBetaAgent
-from agent.rl.rl_env import RlEnv
+from agent.rl.rl_env import RlEnv2
 import numpy as np
 from game.go import Board
 from game.go import opponent_color
@@ -33,7 +33,7 @@ class ApproxQAgent(RlAgent):
         return max(legal_actions, key=lambda action: self._calc_q(board, action))
 
     def get_default_path(self):
-        return '%s.npy' % self.__class__.__name__
+        return '%s_%s.npy' % (self.__class__.__name__, self.color)
 
     def save(self, path_file=None):
         """Save the weight vector."""
@@ -50,13 +50,13 @@ class ApproxQAgent(RlAgent):
         self.w = np.load(path_file)
         print('Loaded weights from ' + path_file)
 
-    def train(self, epochs, lr, discount, exploration_rate, decay_rate=0.9, decay_epoch=200):
+    def train(self, epochs, lr, discount, exploration_rate, decay_rate=0.9, decay_epoch=500):
         """
         Use RandomAgent for opponent.
         :param epochs: one epoch = one game
         :param lr: learning rate
         :param discount:
-        :param exploration_rate: the probability to cause random move during training
+        :param exploration_rate: the probability to cause self random move during training
         :param decay_rate: the rate to decay learning rate and exploration rate
         :param decay_epoch: the number of epochs to apply decay
         :return:
@@ -65,7 +65,7 @@ class ApproxQAgent(RlAgent):
             raise ValueError('exploration_rate should be in [0, 1]!')
 
         num_feats = self.rl_env.get_num_feats()
-        self.w = np.random.random(num_feats)
+        self.w = np.array([-1]+[-0.5]*(-1+num_feats)+[0.8]+[0.4]*(-1+num_feats))
 
         print('Start training ' + str(self))
         for epoch in range(epochs):
@@ -84,7 +84,7 @@ class ApproxQAgent(RlAgent):
     def _train_one_epoch(self, lr, discount, exploration_rate):
         """Return the mean of difference during this epoch"""
         # Opponent: minimax with random move
-        prob_oppo_random = 0.4
+        prob_oppo_random = 0.1
         agent_oppo = AlphaBetaAgent(opponent_color(self.color), depth=1)
         agent_oppo_random = RandomAgent(opponent_color(self.color))
 
@@ -98,7 +98,6 @@ class ApproxQAgent(RlAgent):
         diffs = []
         while board.winner is None:
             legal_actions = board.get_legal_actions()
-
             # Get next action with exploration
             if random.uniform(0, 1) < exploration_rate:
                 action_next = random.choice(legal_actions)
@@ -106,19 +105,20 @@ class ApproxQAgent(RlAgent):
                 action_next = max(legal_actions, key=lambda action: self._calc_q(board, action))
 
             # Keep current features
-            feats = self.rl_env.extract_features(board, action_next, self.color)
-            q = self.w.dot(feats)
+            feats ,isself = self.rl_env.extract_features(board, action_next, self.color)
+            if isself:
+                q=self.w.dot(feats)
+            else:
+                q=-self.w.dot(self.rl_env.reverse_features(feats))
 
             # Apply next action
             board.put_stone(action_next, check_legal=False)
-
             # Let opponent play
             if board.winner is None:
                 if random.uniform(0, 1) < prob_oppo_random:
                     board.put_stone(agent_oppo_random.get_action(board), check_legal=False)
                 else:
                     board.put_stone(agent_oppo.get_action(board), check_legal=False)
-
             # Calc difference
             reward_now = self.rl_env.get_reward(board, self.color)
             reward_future = 0
@@ -130,16 +130,23 @@ class ApproxQAgent(RlAgent):
             diffs.append(difference)
 
             # Apply weight update
-            self.w += (lr * difference * feats)
+            if isself:
+                self.w += (lr * difference * feats)
+            else:
+                self.w -= (lr * difference * self.rl_env.reverse_features(feats))
 
         return mean(diffs)
 
     def _calc_q(self, board, action):
-        return self.w.dot(self.rl_env.extract_features(board, action, self.color))
+        feats,isself = self.rl_env.extract_features(board, action, self.color)
+        if isself:
+            return  self.w.dot(feats)
+        else:
+            return  -self.w.dot(self.rl_env.reverse_features(feats))
 
 
 if __name__ == '__main__':
     # Train and save ApproxQAgent
-    approx_q_agent = ApproxQAgent('BLACK', RlEnv())
+    approx_q_agent = ApproxQAgent('BLACK', RlEnv2())
     approx_q_agent.train(2000, 0.001, 0.9, 0.1)
     approx_q_agent.save()

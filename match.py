@@ -178,7 +178,7 @@ def get_agent(str_agent, color, depth):
         return ExpectimaxAgent(color, depth=depth)
     elif str_agent == 'approx-q':
         agent = ApproxQAgent(color, RlEnv())
-        agent.load('agent/ApproxQAgent_' + color + '.npy')
+        agent.load('agent/rl/ApproxQAgent.npy')
         return agent
     else:
         raise ValueError('Invalid agent for ' + color)

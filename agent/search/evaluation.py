@@ -1,5 +1,6 @@
 from game.go import Board, opponent_color
 from agent.util import get_num_endangered_groups, get_liberties, is_dangerous_liberty, get_num_groups_with_k_liberties
+from numpy.random import normal
 """
 Evaluation functions for search_agent.
 """
@@ -24,7 +25,7 @@ def evaluate(board: Board, color):
     liberties_self, liberties_oppo = get_liberties(board, color)
     for liberty in liberties_oppo:
         if is_dangerous_liberty(board, liberty, oppo):
-            return score_win / 2  # Exist a way to guarantee winning in the next next move
+            return score_win / 2  # Good probability to win in the next next move
     for liberty in liberties_self:
         if is_dangerous_liberty(board, liberty, color):
             self_groups = board.libertydict.get_groups(color, liberty)
@@ -35,7 +36,7 @@ def evaluate(board: Board, color):
                     able_to_save = True
                     break
             if not able_to_save:
-                return -score_win / 2  # Exist a way to guarantee losing in the next next move
+                return -score_win / 2  # Good probability to lose in the next next move
 
     # Score for groups
     num_groups_2lbt_self, num_groups_2lbt_oppo = get_num_groups_with_k_liberties(board, color, 2)
@@ -65,4 +66,4 @@ def evaluate(board: Board, color):
     # score_groups_oppo += [0, 0]
     # finals = score_groups_oppo[0] - score_groups_self[0] + score_groups_oppo[1] - score_groups_self[1]
 
-    return score_groups + score_liberties
+    return score_groups * normal(1, 0.1) + score_liberties * normal(1, 0.1)
